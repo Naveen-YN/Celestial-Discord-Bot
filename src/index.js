@@ -1,9 +1,8 @@
-const { Client, Collection, Events, GatewayIntentBits, MessageFlags, AttachmentBuilder } = require('discord.js');
+const { Client, Collection, Events, GatewayIntentBits, MessageFlags, EmbedBuilder } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
 const config = require('../config.json');
 require('./server'); // Import the Express server
-const { createWelcomeImage } = require('./utils/welcomeCanvas');
 
 const client = new Client({
     intents: [
@@ -66,24 +65,24 @@ client.on(Events.InteractionCreate, async interaction => {
 // Handle new member joins
 client.on(Events.GuildMemberAdd, async member => {
     try {
+        // In a real implementation, you would fetch this from a database
         const welcomeChannel = member.guild.channels.cache.get(config.welcomeChannelId);
+
         if (!welcomeChannel) return;
 
-        // Generate welcome image
-        const welcomeImageBuffer = await createWelcomeImage(member, {
-            textColor: '#ffffff',
-            fontSize: 42,
-            avatarSize: 128,
-        });
+        const welcomeEmbed = new EmbedBuilder()
+            .setTitle(`Welcome to ${member.guild.name}!`)
+            .setColor('#0099ff')
+            .setDescription(`Welcome ${member}! We're glad you're here.`)
+            .setThumbnail(member.user.displayAvatarURL())
+            .addFields(
+                { name: '👥 Member Count', value: `You are member #${member.guild.memberCount}`, inline: true },
+                { name: '📜 Rules', value: 'Please check our rules channel', inline: true },
+                { name: '🎉 Have fun!', value: 'Enjoy your stay!' }
+            )
+            .setTimestamp();
 
-        const attachment = new AttachmentBuilder(welcomeImageBuffer, { name: 'welcome.png' });
-
-        const welcomeMessage = `Welcome ${member}! We're glad you're here. 🎉`;
-
-        await welcomeChannel.send({
-            content: welcomeMessage,
-            files: [attachment]
-        });
+        await welcomeChannel.send({ embeds: [welcomeEmbed] });
     } catch (error) {
         console.error('Error sending welcome message:', error);
     }

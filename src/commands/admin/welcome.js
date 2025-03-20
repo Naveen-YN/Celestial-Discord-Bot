@@ -1,95 +1,208 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags, ChannelType, AttachmentBuilder } = require('discord.js');
-const { createWelcomeImage } = require('../../utils/welcomeCanvas');
+const {
+    SlashCommandBuilder,
+    PermissionFlagsBits,
+    EmbedBuilder,
+    MessageFlags,
+    ChannelType,
+} = require("discord.js");
+const config = require("../../../config.json");
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('welcome')
-        .setDescription('Configure welcome message settings')
-        .addSubcommand(subcommand =>
+        .setName("welcome")
+        .setDescription("Configure welcome message settings")
+        .addSubcommand((subcommand) =>
             subcommand
-                .setName('set')
-                .setDescription('Set the welcome message')
-                .addChannelOption(option =>
-                    option.setName('channel')
-                        .setDescription('The channel to send welcome messages')
+                .setName("set")
+                .setDescription("Set the welcome message")
+                .addChannelOption((option) =>
+                    option
+                        .setName("channel")
+                        .setDescription("The channel to send welcome messages")
                         .addChannelTypes(ChannelType.GuildText)
-                        .setRequired(true))
-                .addStringOption(option =>
-                    option.setName('background')
-                        .setDescription('URL of the background image for welcome messages'))
-                .addStringOption(option =>
-                    option.setName('color')
-                        .setDescription('Text color (hex code)')
+                        .setRequired(true),
+                )
+                .addStringOption((option) =>
+                    option
+                        .setName("style")
+                        .setDescription("The style of the welcome message")
+                        .setRequired(true)
                         .addChoices(
-                            { name: 'White', value: '#ffffff' },
-                            { name: 'Gold', value: '#ffd700' },
-                            { name: 'Aqua', value: '#00ffff' },
-                            { name: 'Pink', value: '#ff69b4' }
-                        )))
-        .addSubcommand(subcommand =>
+                            { name: "Simple Text", value: "text" },
+                            { name: "Embed - Basic", value: "embed_basic" },
+                            {
+                                name: "Embed - Advanced",
+                                value: "embed_advanced",
+                            },
+                        ),
+                )
+                .addStringOption((option) =>
+                    option
+                        .setName("message")
+                        .setDescription("The welcome message content")
+                        .setRequired(true),
+                )
+                .addStringOption((option) =>
+                    option
+                        .setName("color")
+                        .setDescription("Embed color (hex code)")
+                        .addChoices(
+                            { name: "Blue", value: "#0099ff" },
+                            { name: "Green", value: "#00ff00" },
+                            { name: "Red", value: "#ff0000" },
+                            { name: "Purple", value: "#9900ff" },
+                        ),
+                )
+                .addStringOption((option) =>
+                    option
+                        .setName("image")
+                        .setDescription("Welcome banner image URL"),
+                )
+                .addStringOption((option) =>
+                    option
+                        .setName("thumbnail")
+                        .setDescription("Thumbnail image URL"),
+                )
+                .addStringOption((option) =>
+                    option
+                        .setName("footer")
+                        .setDescription("Footer text for embed"),
+                ),
+        )
+        .addSubcommand((subcommand) =>
             subcommand
-                .setName('test')
-                .setDescription('Test the current welcome message'))
-        .addSubcommand(subcommand =>
+                .setName("variables")
+                .setDescription("Show available message variables"),
+        )
+        .addSubcommand((subcommand) =>
             subcommand
-                .setName('preview')
-                .setDescription('Preview the welcome image with current settings'))
+                .setName("test")
+                .setDescription("Test the current welcome message"),
+        )
+        .addSubcommand((subcommand) =>
+            subcommand
+                .setName("disable")
+                .setDescription("Disable welcome messages"),
+        )
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     async execute(interaction) {
-        await interaction.deferReply();
         const subcommand = interaction.options.getSubcommand();
 
-        if (subcommand === 'set') {
-            const channel = interaction.options.getChannel('channel');
-            const background = interaction.options.getString('background');
-            const textColor = interaction.options.getString('color') ?? '#ffffff';
+        if (subcommand === "variables") {
+            const variablesEmbed = new EmbedBuilder()
+                .setTitle("Available Welcome Message Variables")
+                .setColor("#0099ff")
+                .setDescription("Use these variables in your welcome message:")
+                .addFields(
+                    { name: "{user}", value: "Mentions the new member" },
+                    { name: "{user.name}", value: "Username without mention" },
+                    {
+                        name: "{user.tag}",
+                        value: "Username with discriminator",
+                    },
+                    { name: "{server}", value: "Server name" },
+                    { name: "{memberCount}", value: "Current member count" },
+                    {
+                        name: "{channel}",
+                        value: "Mentions a channel (use #channel-name)",
+                    },
+                );
 
-            // Store these settings (in a real implementation, save to database)
+            await interaction.reply({
+                embeds: [variablesEmbed],
+                flags: MessageFlags.Ephemeral,
+            });
+            return;
+        }
+
+        if (subcommand === "set") {
+            const channel = interaction.options.getChannel("channel");
+            const style = interaction.options.getString("style");
+            const message = interaction.options.getString("message");
+            const color = interaction.options.getString("color") ?? "#0099ff";
+            const image = interaction.options.getString("image");
+            const thumbnail = interaction.options.getString("thumbnail");
+            const footer = interaction.options.getString("footer");
+
+            // Store the configuration (in a real implementation, this would go to a database)
             const welcomeConfig = {
                 channelId: channel.id,
-                background,
-                textColor
+                style,
+                message,
+                color,
+                image,
+                thumbnail,
+                footer,
             };
 
-            await interaction.editReply({
-                content: `Welcome messages will now be sent to ${channel} with the specified settings!`,
-                flags: MessageFlags.Ephemeral
+            const embed = new EmbedBuilder()
+                .setTitle("Welcome Message Configuration")
+                .setColor(color)
+                .setDescription("Welcome message has been configured!")
+                .addFields(
+                    { name: "Channel", value: `${channel}`, inline: true },
+                    { name: "Style", value: style, inline: true },
+                    { name: "Message", value: message },
+                );
+
+            if (image)
+                embed.addFields({
+                    name: "Banner",
+                    value: "Custom banner image set",
+                });
+            if (thumbnail)
+                embed.addFields({
+                    name: "Thumbnail",
+                    value: "Custom thumbnail set",
+                });
+            if (footer) embed.addFields({ name: "Footer", value: footer });
+
+            await interaction.reply({
+                embeds: [embed],
+                flags: MessageFlags.Ephemeral,
             });
-        }
-        else if (subcommand === 'test' || subcommand === 'preview') {
-            try {
-                const welcomeImageBuffer = await createWelcomeImage(interaction.member, {
-                    textColor: '#ffffff',
-                    fontSize: 42,
-                    avatarSize: 128,
-                });
+        } else if (subcommand === "test") {
+            const testUser = interaction.user;
+            const guild = interaction.guild;
+            const channel = interaction.channel;
 
-                const attachment = new AttachmentBuilder(welcomeImageBuffer, { name: 'welcome-preview.png' });
+            const welcomeEmbed = new EmbedBuilder()
+                .setTitle(`Welcome to ${guild.name}!`)
+                .setColor("#0099ff")
+                .setDescription(
+                    `Welcome ${testUser}! We're glad you're here.\n\nThis is a test of the welcome message.`,
+                )
+                .setThumbnail(testUser.displayAvatarURL())
+                .addFields(
+                    {
+                        name: "👥 Member Count",
+                        value: `You are member #${guild.memberCount}`,
+                        inline: true,
+                    },
+                    {
+                        name: "📜 Rules",
+                        value: "Please check our rules channel",
+                        inline: true,
+                    },
+                    { name: "🎉 Have fun!", value: "Enjoy your stay!" },
+                )
+                .setTimestamp();
 
-                if (subcommand === 'preview') {
-                    await interaction.editReply({
-                        content: 'Here\'s how the welcome image will look:',
-                        files: [attachment]
-                    });
-                } else {
-                    const channel = interaction.channel;
-                    await channel.send({
-                        content: `Welcome ${interaction.user}! (Test Message)`,
-                        files: [attachment]
-                    });
-                    await interaction.editReply({
-                        content: 'Test welcome message sent!',
-                        flags: MessageFlags.Ephemeral
-                    });
-                }
-            } catch (error) {
-                console.error('Error generating welcome image:', error);
-                await interaction.editReply({
-                    content: 'There was an error generating the welcome image. Please check the image URLs and try again.',
-                    flags: MessageFlags.Ephemeral
-                });
-            }
+            await channel.send({
+                content: "Testing welcome message:",
+                embeds: [welcomeEmbed],
+            });
+
+            await interaction.reply({
+                content: "Test welcome message has been sent!",
+                flags: MessageFlags.Ephemeral,
+            });
+        } else if (subcommand === "disable") {
+            await interaction.reply({
+                content: "Welcome messages have been disabled.",
+                flags: MessageFlags.Ephemeral,
+            });
         }
     },
 };
