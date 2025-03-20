@@ -28,7 +28,6 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node src/deploy-commands.js && node src/index.js"
-waitForPort = 5000
 
 [deployment]
 run = ["sh", "-c", "node src/deploy-commands.js && node src/index.js"]
