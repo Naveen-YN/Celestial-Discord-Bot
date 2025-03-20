@@ -1,7 +1,8 @@
-const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
+const { Client, Collection, Events, GatewayIntentBits, MessageFlags } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
 const config = require('../config.json');
+require('./server'); // Import the Express server
 
 const client = new Client({
     intents: [
@@ -21,11 +22,11 @@ const commandFolders = fs.readdirSync(foldersPath);
 for (const folder of commandFolders) {
     const commandsPath = path.join(foldersPath, folder);
     const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-    
+
     for (const file of commandFiles) {
         const filePath = path.join(commandsPath, file);
         const command = require(filePath);
-        
+
         if ('data' in command && 'execute' in command) {
             client.commands.set(command.data.name, command);
         }
@@ -48,11 +49,26 @@ client.on(Events.InteractionCreate, async interaction => {
     } catch (error) {
         console.error(error);
         if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({ content: 'There was an error executing this command!', ephemeral: true });
+            await interaction.followUp({ 
+                content: 'There was an error executing this command!', 
+                flags: MessageFlags.Ephemeral
+            });
         } else {
-            await interaction.reply({ content: 'There was an error executing this command!', ephemeral: true });
+            await interaction.reply({ 
+                content: 'There was an error executing this command!', 
+                flags: MessageFlags.Ephemeral
+            });
         }
     }
+});
+
+// Handle process errors to prevent crashes
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (error) => {
+    console.error('Unhandled Rejection:', error);
 });
 
 client.once(Events.ClientReady, c => {
