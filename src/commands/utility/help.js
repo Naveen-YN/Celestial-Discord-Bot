@@ -8,7 +8,7 @@ module.exports = {
     async execute(interaction) {
         const embed = new EmbedBuilder()
             .setTitle('Command Help')
-            .setColor(0x0099FF)
+            .setColor(0xFCC66F)
             .addFields(
                 {
                     name: '🛡️ Moderation',
