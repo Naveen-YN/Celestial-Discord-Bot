@@ -4,15 +4,15 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('purge')
         .setDescription('Bulk delete messages')
-        .addChannelOption(option =>
-            option.setName('channel')
-                .setDescription('The channel to delete messages from (defaults to current channel)'))
         .addIntegerOption(option =>
             option.setName('amount')
                 .setDescription('Number of messages to delete (max 100)')
                 .setRequired(true)
                 .setMinValue(1)
                 .setMaxValue(100))
+        .addChannelOption(option =>
+            option.setName('channel')
+                .setDescription('The channel to delete messages from (defaults to current channel)'))
         .addUserOption(option =>
             option.setName('user')
                 .setDescription('Only delete messages from this user'))

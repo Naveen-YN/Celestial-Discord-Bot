@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -100,13 +100,13 @@ module.exports = {
             await channel.send({ embeds: [embed] });
             await interaction.reply({
                 content: `Embed successfully sent to ${channel}!`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         } catch (error) {
             console.error(error);
             await interaction.reply({
                 content: 'There was an error sending the embed! Make sure all URLs are valid and I have permission to send messages in the target channel.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     },

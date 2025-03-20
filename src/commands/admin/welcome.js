@@ -123,10 +123,9 @@ module.exports = {
             });
         } 
         else if (subcommand === 'test') {
-            // Create a sample welcome message based on the current configuration
             const testUser = interaction.user;
             const guild = interaction.guild;
-            const channel = interaction.options.getChannel('channel'); // Get channel from options
+            const channel = interaction.channel;
 
             const welcomeEmbed = new EmbedBuilder()
                 .setTitle(`Welcome to ${guild.name}!`)
