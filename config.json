@@ -1,0 +1,9 @@
+{
+    "prefix": "/",
+    "clientId": "YOUR_CLIENT_ID",
+    "guildId": "YOUR_GUILD_ID",
+    "adminRoleId": "YOUR_ADMIN_ROLE_ID",
+    "modRoleId": "YOUR_MOD_ROLE_ID",
+    "welcomeChannelId": "YOUR_WELCOME_CHANNEL_ID",
+    "logChannelId": "YOUR_LOG_CHANNEL_ID"
+}
