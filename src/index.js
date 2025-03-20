@@ -1,4 +1,4 @@
-const { Client, Collection, Events, GatewayIntentBits, MessageFlags } = require('discord.js');
+const { Client, Collection, Events, GatewayIntentBits, MessageFlags, EmbedBuilder } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
 const config = require('../config.json');
@@ -59,6 +59,32 @@ client.on(Events.InteractionCreate, async interaction => {
                 flags: MessageFlags.Ephemeral
             });
         }
+    }
+});
+
+// Handle new member joins
+client.on(Events.GuildMemberAdd, async member => {
+    try {
+        // In a real implementation, you would fetch this from a database
+        const welcomeChannel = member.guild.channels.cache.get(config.welcomeChannelId);
+
+        if (!welcomeChannel) return;
+
+        const welcomeEmbed = new EmbedBuilder()
+            .setTitle(`Welcome to ${member.guild.name}!`)
+            .setColor('#0099ff')
+            .setDescription(`Welcome ${member}! We're glad you're here.`)
+            .setThumbnail(member.user.displayAvatarURL())
+            .addFields(
+                { name: '👥 Member Count', value: `You are member #${member.guild.memberCount}`, inline: true },
+                { name: '📜 Rules', value: 'Please check our rules channel', inline: true },
+                { name: '🎉 Have fun!', value: 'Enjoy your stay!' }
+            )
+            .setTimestamp();
+
+        await welcomeChannel.send({ embeds: [welcomeEmbed] });
+    } catch (error) {
+        console.error('Error sending welcome message:', error);
     }
 });
 

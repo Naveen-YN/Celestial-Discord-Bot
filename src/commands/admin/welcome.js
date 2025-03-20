@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags, ChannelType } = require('discord.js');
 const config = require('../../../config.json');
 
 module.exports = {
@@ -9,6 +9,11 @@ module.exports = {
             subcommand
                 .setName('set')
                 .setDescription('Set the welcome message')
+                .addChannelOption(option =>
+                    option.setName('channel')
+                        .setDescription('The channel to send welcome messages')
+                        .addChannelTypes(ChannelType.GuildText)
+                        .setRequired(true))
                 .addStringOption(option =>
                     option.setName('style')
                         .setDescription('The style of the welcome message')
@@ -67,7 +72,8 @@ module.exports = {
                     { name: '{user.name}', value: 'Username without mention' },
                     { name: '{user.tag}', value: 'Username with discriminator' },
                     { name: '{server}', value: 'Server name' },
-                    { name: '{memberCount}', value: 'Current member count' }
+                    { name: '{memberCount}', value: 'Current member count' },
+                    { name: '{channel}', value: 'Mentions a channel (use #channel-name)' }
                 );
 
             await interaction.reply({ 
@@ -78,6 +84,7 @@ module.exports = {
         }
 
         if (subcommand === 'set') {
+            const channel = interaction.options.getChannel('channel');
             const style = interaction.options.getString('style');
             const message = interaction.options.getString('message');
             const color = interaction.options.getString('color') ?? '#0099ff';
@@ -87,6 +94,7 @@ module.exports = {
 
             // Store the configuration (in a real implementation, this would go to a database)
             const welcomeConfig = {
+                channelId: channel.id,
                 style,
                 message,
                 color,
@@ -100,9 +108,9 @@ module.exports = {
                 .setColor(color)
                 .setDescription('Welcome message has been configured!')
                 .addFields(
-                    { name: 'Style', value: style },
-                    { name: 'Message', value: message },
-                    { name: 'Channel', value: `<#${config.welcomeChannelId}>` }
+                    { name: 'Channel', value: `${channel}`, inline: true },
+                    { name: 'Style', value: style, inline: true },
+                    { name: 'Message', value: message }
                 );
 
             if (image) embed.addFields({ name: 'Banner', value: 'Custom banner image set' });
@@ -118,6 +126,7 @@ module.exports = {
             // Create a sample welcome message based on the current configuration
             const testUser = interaction.user;
             const guild = interaction.guild;
+            const channel = interaction.options.getChannel('channel'); // Get channel from options
 
             const welcomeEmbed = new EmbedBuilder()
                 .setTitle(`Welcome to ${guild.name}!`)
@@ -125,15 +134,20 @@ module.exports = {
                 .setDescription(`Welcome ${testUser}! We're glad you're here.\n\nThis is a test of the welcome message.`)
                 .setThumbnail(testUser.displayAvatarURL())
                 .addFields(
-                    { name: '👥 Member Count', value: `You are member #${guild.memberCount}` },
-                    { name: '📜 Rules', value: 'Please check our rules channel' },
+                    { name: '👥 Member Count', value: `You are member #${guild.memberCount}`, inline: true },
+                    { name: '📜 Rules', value: 'Please check our rules channel', inline: true },
                     { name: '🎉 Have fun!', value: 'Enjoy your stay!' }
                 )
                 .setTimestamp();
 
-            await interaction.reply({ 
+            await channel.send({ 
                 content: 'Testing welcome message:',
                 embeds: [welcomeEmbed]
+            });
+
+            await interaction.reply({ 
+                content: 'Test welcome message has been sent!',
+                flags: MessageFlags.Ephemeral
             });
         }
         else if (subcommand === 'disable') {
