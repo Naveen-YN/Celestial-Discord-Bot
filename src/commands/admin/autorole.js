@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -35,14 +35,14 @@ module.exports = {
             if (role.managed) {
                 return interaction.reply({ 
                     content: 'Cannot add managed roles to auto-role.',
-                    ephemeral: true 
+                    flags: MessageFlags.Ephemeral 
                 });
             }
 
             if (role.position >= interaction.guild.members.me.roles.highest.position) {
                 return interaction.reply({ 
                     content: 'Cannot add roles higher than my highest role.',
-                    ephemeral: true 
+                    flags: MessageFlags.Ephemeral 
                 });
             }
 
@@ -53,7 +53,10 @@ module.exports = {
                 .setDescription(`Added ${role.name} to auto-role list`)
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ 
+                embeds: [embed], 
+                flags: MessageFlags.Ephemeral 
+            });
         }
         else if (subcommand === 'remove') {
             const role = interaction.options.getRole('role');
@@ -64,7 +67,10 @@ module.exports = {
                 .setDescription(`Removed ${role.name} from auto-role list`)
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ 
+                embeds: [embed], 
+                flags: MessageFlags.Ephemeral 
+            });
         }
         else if (subcommand === 'list') {
             // In a real implementation, you would fetch this from a database
@@ -77,7 +83,10 @@ module.exports = {
                 )
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ 
+                embeds: [embed], 
+                flags: MessageFlags.Ephemeral 
+            });
         }
     },
 };

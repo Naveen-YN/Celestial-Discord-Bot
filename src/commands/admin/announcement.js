@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -38,16 +38,16 @@ module.exports = {
                 content: mention ? '@everyone' : '',
                 embeds: [embed]
             });
-            
+
             await interaction.reply({
                 content: `Announcement successfully sent to ${channel}!`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         } catch (error) {
             console.error(error);
             await interaction.reply({
                 content: 'There was an error sending the announcement!',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     },

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -30,24 +30,30 @@ module.exports = {
         const reason = interaction.options.getString('reason') ?? 'No reason provided';
 
         if (!target) {
-            return interaction.reply({ content: 'User not found!', ephemeral: true });
+            return interaction.reply({ 
+                content: 'User not found!', 
+                flags: MessageFlags.Ephemeral 
+            });
         }
 
         if (!target.moderatable) {
-            return interaction.reply({ content: 'I cannot timeout this user!', ephemeral: true });
+            return interaction.reply({ 
+                content: 'I cannot timeout this user!', 
+                flags: MessageFlags.Ephemeral 
+            });
         }
 
         try {
             await target.timeout(duration * 60 * 1000, reason);
             await interaction.reply({
                 content: `Successfully timed out ${target.user.tag} for ${duration} minutes\nReason: ${reason}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         } catch (error) {
             console.error(error);
             await interaction.reply({
                 content: 'There was an error trying to timeout this user!',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     },

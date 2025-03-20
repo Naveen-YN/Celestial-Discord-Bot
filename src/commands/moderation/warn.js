@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,7 +18,10 @@ module.exports = {
         const reason = interaction.options.getString('reason') ?? 'No reason provided';
 
         if (!target) {
-            return interaction.reply({ content: 'User not found!', ephemeral: true });
+            return interaction.reply({ 
+                content: 'User not found!', 
+                flags: MessageFlags.Ephemeral 
+            });
         }
 
         const embed = new EmbedBuilder()
@@ -40,6 +43,9 @@ module.exports = {
             console.error('Could not DM user:', error);
         }
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ 
+            embeds: [embed], 
+            flags: MessageFlags.Ephemeral 
+        });
     },
 };
