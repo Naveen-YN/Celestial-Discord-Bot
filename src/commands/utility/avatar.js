@@ -6,17 +6,17 @@ module.exports = {
         .setDescription('Get the avatar of a user')
         .addUserOption(option =>
             option.setName('user')
-                .setDescription('The user to get the avatar from')),
+                .setDescription('The 👤user to get the avatar from ')),
 
     async execute(interaction) {
-        const target = interaction.options.getUser('target') ?? interaction.user;
+        const user = interaction.options.getUser('user') ?? interaction.user;
 
         const embed = new EmbedBuilder()
-            .setTitle(`${target.username}'s Avatar`)
+            .setTitle(`${user.username}'s Avatar`)
             .setColor(0x0099FF)
-            .setImage(target.displayAvatarURL({ size: 1024, dynamic: true }))
+            .setImage(user.displayAvatarURL({ size: 1024, dynamic: true }))
             .addFields(
-                { name: 'Avatar URL', value: `[Click here](${target.displayAvatarURL({ size: 1024, dynamic: true })})` }
+                { name: 'Avatar URL', value: `[Click here](${user.displayAvatarURL({ size: 1024, dynamic: true })})` }
             )
             .setTimestamp();
 
