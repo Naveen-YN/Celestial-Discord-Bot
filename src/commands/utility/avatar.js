@@ -5,7 +5,7 @@ module.exports = {
         .setName('avatar')
         .setDescription('Get the avatar of a user')
         .addUserOption(option =>
-            option.setName('target')
+            option.setName('user')
                 .setDescription('The user to get the avatar from')),
 
     async execute(interaction) {
