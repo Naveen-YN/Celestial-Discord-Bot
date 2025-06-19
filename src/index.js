@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const config = require('../config.json');
 require('./server'); // Import the Express server
-
+require('dotenv').config();
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
