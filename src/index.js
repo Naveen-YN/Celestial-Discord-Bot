@@ -101,4 +101,7 @@ client.once(Events.ClientReady, c => {
     console.log(`Ready! Logged in as ${c.user.tag}`);
 });
 
+// Make bot client globally available for dashboard
+global.botClient = client;
+
 client.login(process.env.DISCORD_TOKEN);

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Bot Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                    <span>Bot Dashboard</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-tab="overview">
+                    <i class="fas fa-home"></i>
+                    <span>Overview</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="embed-builder">
+                    <i class="fas fa-edit"></i>
+                    <span>Embed Builder</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="welcome-config">
+                    <i class="fas fa-door-open"></i>
+                    <span>Welcome Config</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="commands">
+                    <i class="fas fa-terminal"></i>
+                    <span>Commands</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="page-title">Bot Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <div class="bot-status">
+                        <div class="status-indicator online"></div>
+                        <span>Bot Online</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="overview">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Servers</h3>
+                            <p class="stat-number" id="server-count">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Users</h3>
+                            <p class="stat-number" id="user-count">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-terminal"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Commands</h3>
+                            <p class="stat-number">19</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Uptime</h3>
+                            <p class="stat-number" id="uptime">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-activity">
+                    <h2>Recent Activity</h2>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Bot started successfully</span>
+                            <small>Just now</small>
+                        </div>
+                        <div class="activity-item">
+                            <i class="fas fa-sync"></i>
+                            <span>Commands refreshed</span>
+                            <small>2 minutes ago</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="embed-builder" style="display: none;">
+                <div class="embed-builder-container">
+                    <div class="embed-form">
+                        <h2>Embed Builder</h2>
+                        <form id="embedForm">
+                            <div class="form-group">
+                                <label for="embedTitle">Title</label>
+                                <input type="text" id="embedTitle" placeholder="Enter embed title">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="embedDescription">Description</label>
+                                <textarea id="embedDescription" placeholder="Enter embed description" rows="4"></textarea>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="embedColor">Color</label>
+                                    <input type="color" id="embedColor" value="#0099ff">
+                                </div>
+                                <div class="form-group">
+                                    <label for="embedUrl">URL</label>
+                                    <input type="url" id="embedUrl" placeholder="https://example.com">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="embedImage">Image URL</label>
+                                <input type="url" id="embedImage" placeholder="https://example.com/image.png">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="embedThumbnail">Thumbnail URL</label>
+                                <input type="url" id="embedThumbnail" placeholder="https://example.com/thumbnail.png">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Fields</label>
+                                <div id="embedFields">
+                                    <div class="field-group">
+                                        <input type="text" placeholder="Field name" class="field-name">
+                                        <textarea placeholder="Field value" class="field-value" rows="2"></textarea>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" class="field-inline"> Inline
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="button" id="addField" class="btn-secondary">Add Field</button>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="embedFooter">Footer Text</label>
+                                <input type="text" id="embedFooter" placeholder="Footer text">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="embedFooterIcon">Footer Icon URL</label>
+                                <input type="url" id="embedFooterIcon" placeholder="https://example.com/icon.png">
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" id="previewEmbed" class="btn-primary">Preview</button>
+                                <button type="button" id="sendEmbed" class="btn-success">Send Embed</button>
+                                <button type="button" id="exportEmbed" class="btn-secondary">Export JSON</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="embed-preview">
+                        <h3>Preview</h3>
+                        <div id="embedPreviewContainer">
+                            <div class="discord-embed">
+                                <div class="embed-content">
+                                    <div class="embed-title">Sample Embed Title</div>
+                                    <div class="embed-description">This is a sample embed description. Start building your embed to see the preview update in real-time!</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="welcome-config" style="display: none;">
+                <div class="welcome-config-container">
+                    <h2>Welcome Message Configuration</h2>
+                    <form id="welcomeForm">
+                        <div class="form-group">
+                            <label for="welcomeChannel">Welcome Channel</label>
+                            <select id="welcomeChannel">
+                                <option value="">Select a channel...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="welcomeStyle">Message Style</label>
+                            <select id="welcomeStyle">
+                                <option value="text">Simple Text</option>
+                                <option value="embed_basic">Embed - Basic</option>
+                                <option value="embed_advanced">Embed - Advanced</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="welcomeMessage">Welcome Message</label>
+                            <textarea id="welcomeMessage" placeholder="Welcome {user} to {server}! You are member #{memberCount}" rows="4"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="welcomeColor">Embed Color</label>
+                            <input type="color" id="welcomeColor" value="#0099ff">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="welcomeImage">Banner Image URL</label>
+                            <input type="url" id="welcomeImage" placeholder="https://example.com/banner.png">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="welcomeThumbnail">Thumbnail URL</label>
+                            <input type="url" id="welcomeThumbnail" placeholder="https://example.com/thumbnail.png">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="welcomeFooter">Footer Text</label>
+                            <input type="text" id="welcomeFooter" placeholder="Welcome to our server!">
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" id="saveWelcomeConfig" class="btn-primary">Save Configuration</button>
+                            <button type="button" id="testWelcome" class="btn-secondary">Test Welcome</button>
+                        </div>
+                    </form>
+                    
+                    <div class="variables-info">
+                        <h3>Available Variables</h3>
+                        <div class="variables-list">
+                            <div class="variable-item">
+                                <code>{user}</code>
+                                <span>Mentions the new member</span>
+                            </div>
+                            <div class="variable-item">
+                                <code>{user.name}</code>
+                                <span>Username without mention</span>
+                            </div>
+                            <div class="variable-item">
+                                <code>{user.tag}</code>
+                                <span>Username with discriminator</span>
+                            </div>
+                            <div class="variable-item">
+                                <code>{server}</code>
+                                <span>Server name</span>
+                            </div>
+                            <div class="variable-item">
+                                <code>{memberCount}</code>
+                                <span>Current member count</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="commands" style="display: none;">
+                <div class="commands-container">
+                    <h2>Bot Commands</h2>
+                    <div class="command-categories">
+                        <div class="category">
+                            <h3>Administration</h3>
+                            <div class="command-list">
+                                <div class="command-item">
+                                    <strong>/announcement</strong>
+                                    <span>Create server announcements</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/autorole</strong>
+                                    <span>Configure automatic role assignment</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/lockdown</strong>
+                                    <span>Lock down channels during emergencies</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/welcome</strong>
+                                    <span>Configure welcome messages</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/refresh</strong>
+                                    <span>Refresh bot commands</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="category">
+                            <h3>Moderation</h3>
+                            <div class="command-list">
+                                <div class="command-item">
+                                    <strong>/ban</strong>
+                                    <span>Ban members from the server</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/kick</strong>
+                                    <span>Kick members from the server</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/timeout</strong>
+                                    <span>Timeout members temporarily</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/warn</strong>
+                                    <span>Issue warnings to members</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/purge</strong>
+                                    <span>Delete multiple messages at once</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="category">
+                            <h3>Utility</h3>
+                            <div class="command-list">
+                                <div class="command-item">
+                                    <strong>/ping</strong>
+                                    <span>Check bot latency</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/help</strong>
+                                    <span>Show help information</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/avatar</strong>
+                                    <span>Display user avatars</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/userinfo</strong>
+                                    <span>Show user information</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/serverinfo</strong>
+                                    <span>Show server information</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/channelinfo</strong>
+                                    <span>Show channel information</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/role</strong>
+                                    <span>Manage user roles</span>
+                                </div>
+                                <div class="command-item">
+                                    <strong>/stats</strong>
+                                    <span>Show bot statistics</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="category">
+                            <h3>Tools</h3>
+                            <div class="command-list">
+                                <div class="command-item">
+                                    <strong>/embed</strong>
+                                    <span>Create custom embed messages</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="settings" style="display: none;">
+                <div class="settings-container">
+                    <h2>Bot Settings</h2>
+                    <div class="settings-section">
+                        <h3>General Settings</h3>
+                        <div class="setting-item">
+                            <label>Bot Status</label>
+                            <select id="botStatus">
+                                <option value="online">Online</option>
+                                <option value="idle">Idle</option>
+                                <option value="dnd">Do Not Disturb</option>
+                                <option value="invisible">Invisible</option>
+                            </select>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label>Activity Type</label>
+                            <select id="activityType">
+                                <option value="playing">Playing</option>
+                                <option value="streaming">Streaming</option>
+                                <option value="listening">Listening to</option>
+                                <option value="watching">Watching</option>
+                            </select>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label>Activity Text</label>
+                            <input type="text" id="activityText" placeholder="Enter activity text">
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>Permissions</h3>
+                        <div class="permission-list">
+                            <div class="permission-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" checked> Administrator Commands
+                                </label>
+                            </div>
+                            <div class="permission-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" checked> Moderation Commands
+                                </label>
+                            </div>
+                            <div class="permission-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" checked> Utility Commands
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-actions">
+                        <button type="button" id="saveSettings" class="btn-primary">Save Settings</button>
+                        <button type="button" id="resetSettings" class="btn-danger">Reset to Default</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
