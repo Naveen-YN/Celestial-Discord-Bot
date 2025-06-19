@@ -125,16 +125,22 @@ module.exports = {
             const thumbnail = interaction.options.getString("thumbnail");
             const footer = interaction.options.getString("footer");
 
-            // Store the configuration (in a real implementation, this would go to a database)
-            const welcomeConfig = {
-                channelId: channel.id,
-                style,
-                message,
-                color,
-                image,
-                thumbnail,
-                footer,
-            };
+            // Save configuration to database
+            try {
+                const { storage } = require("../../../server/storage.js");
+                await storage.upsertWelcomeConfig({
+                    guildId: interaction.guild.id,
+                    channelId: channel.id,
+                    style,
+                    message,
+                    color,
+                    imageUrl: image,
+                    thumbnailUrl: thumbnail,
+                    footerText: footer,
+                });
+            } catch (error) {
+                console.error("Error saving welcome config:", error);
+            }
 
             const embed = new EmbedBuilder()
                 .setTitle("Welcome Message Configuration")

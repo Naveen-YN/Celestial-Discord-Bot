@@ -35,6 +35,11 @@ class BotDashboard {
                 // Update page title
                 const pageTitle = document.querySelector('.page-title');
                 pageTitle.textContent = item.querySelector('span').textContent;
+
+                // Load specific data for certain tabs
+                if (targetTab === 'commands') {
+                    this.loadCommandUsageChart();
+                }
             });
         });
     }
@@ -90,6 +95,22 @@ class BotDashboard {
         exportBtn.addEventListener('click', () => {
             this.exportEmbed();
         });
+
+        // Template functionality
+        const saveTemplateBtn = document.getElementById('saveTemplate');
+        const loadTemplateBtn = document.getElementById('loadTemplate');
+        const templateSelect = document.getElementById('templateSelect');
+
+        saveTemplateBtn.addEventListener('click', () => {
+            this.saveEmbedTemplate();
+        });
+
+        loadTemplateBtn.addEventListener('click', () => {
+            this.loadEmbedTemplate();
+        });
+
+        // Load templates on init
+        this.loadEmbedTemplates();
     }
 
     updateEmbedPreview() {
@@ -363,6 +384,9 @@ class BotDashboard {
 
         // Load servers
         this.loadServers();
+
+        // Load analytics
+        this.loadAnalytics();
     }
 
     loadServers() {
@@ -398,6 +422,199 @@ class BotDashboard {
         .catch(error => {
             console.error('Error loading servers:', error);
             document.getElementById('servers-list').innerHTML = '<div class="loading-message">Error loading servers</div>';
+        });
+    }
+
+    loadAnalytics() {
+        // Load command statistics
+        fetch('/api/command-stats')
+        .then(response => response.json())
+        .then(data => {
+            const topCommandsContainer = document.getElementById('top-commands');
+            
+            if (data.success && data.stats.length > 0) {
+                topCommandsContainer.innerHTML = '';
+                data.stats.slice(0, 5).forEach(stat => {
+                    const item = document.createElement('div');
+                    item.className = 'command-stat-item';
+                    item.innerHTML = `
+                        <span class="command-stat-name">/${stat.commandName}</span>
+                        <span class="command-stat-count">${stat.count}</span>
+                    `;
+                    topCommandsContainer.appendChild(item);
+                });
+            } else {
+                topCommandsContainer.innerHTML = '<div class="loading-message">No command data available</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading command stats:', error);
+            document.getElementById('top-commands').innerHTML = '<div class="loading-message">Error loading data</div>';
+        });
+
+        // Load moderation activity (example data for now)
+        const moderationContainer = document.getElementById('moderation-activity');
+        moderationContainer.innerHTML = `
+            <div class="moderation-stat-item">
+                <span class="moderation-action">Warnings</span>
+                <span class="moderation-count">0</span>
+            </div>
+            <div class="moderation-stat-item">
+                <span class="moderation-action">Bans</span>
+                <span class="moderation-count">0</span>
+            </div>
+            <div class="moderation-stat-item">
+                <span class="moderation-action">Kicks</span>
+                <span class="moderation-count">0</span>
+            </div>
+        `;
+    }
+
+    loadEmbedTemplates() {
+        fetch('/api/embed-templates')
+        .then(response => response.json())
+        .then(data => {
+            const templateSelect = document.getElementById('templateSelect');
+            templateSelect.innerHTML = '<option value="">Select a template...</option>';
+            
+            if (data.success && data.templates) {
+                data.templates.forEach(template => {
+                    const option = document.createElement('option');
+                    option.value = template.id;
+                    option.textContent = template.name;
+                    option.dataset.embedData = JSON.stringify(template.embedData);
+                    templateSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading embed templates:', error);
+        });
+    }
+
+    saveEmbedTemplate() {
+        const templateName = document.getElementById('templateName').value;
+        if (!templateName) {
+            this.showNotification('Please enter a template name', 'warning');
+            return;
+        }
+
+        const embedData = this.getEmbedData();
+        
+        fetch('/api/embed-templates', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: templateName,
+                embedData: embedData,
+                createdBy: 'dashboard-user'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.showNotification('Template saved successfully!', 'success');
+                document.getElementById('templateName').value = '';
+                this.loadEmbedTemplates();
+            } else {
+                this.showNotification('Failed to save template: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            this.showNotification('Error saving template: ' + error.message, 'error');
+        });
+    }
+
+    loadEmbedTemplate() {
+        const templateSelect = document.getElementById('templateSelect');
+        const selectedOption = templateSelect.options[templateSelect.selectedIndex];
+        
+        if (!selectedOption.value) {
+            this.showNotification('Please select a template to load', 'warning');
+            return;
+        }
+
+        try {
+            const embedData = JSON.parse(selectedOption.dataset.embedData);
+            
+            // Populate form with template data
+            document.getElementById('embedTitle').value = embedData.title || '';
+            document.getElementById('embedDescription').value = embedData.description || '';
+            document.getElementById('embedColor').value = embedData.color || '#0099ff';
+            document.getElementById('embedUrl').value = embedData.url || '';
+            document.getElementById('embedImage').value = embedData.image || '';
+            document.getElementById('embedThumbnail').value = embedData.thumbnail || '';
+            document.getElementById('embedFooter').value = embedData.footer?.text || '';
+            document.getElementById('embedFooterIcon').value = embedData.footer?.icon_url || '';
+            
+            // Clear existing fields and add template fields
+            const fieldsContainer = document.getElementById('embedFields');
+            fieldsContainer.innerHTML = '';
+            
+            if (embedData.fields && embedData.fields.length > 0) {
+                embedData.fields.forEach(field => {
+                    const fieldGroup = document.createElement('div');
+                    fieldGroup.className = 'field-group';
+                    fieldGroup.innerHTML = `
+                        <input type="text" placeholder="Field name" class="field-name" value="${field.name}">
+                        <textarea placeholder="Field value" class="field-value" rows="2">${field.value}</textarea>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="field-inline" ${field.inline ? 'checked' : ''}> Inline
+                        </label>
+                        <button type="button" class="btn-danger remove-field">Remove</button>
+                    `;
+                    fieldsContainer.appendChild(fieldGroup);
+
+                    // Add remove functionality
+                    fieldGroup.querySelector('.remove-field').addEventListener('click', () => {
+                        fieldGroup.remove();
+                    });
+                });
+            }
+
+            this.updateEmbedPreview();
+            this.showNotification('Template loaded successfully!', 'success');
+        } catch (error) {
+            this.showNotification('Error loading template: ' + error.message, 'error');
+        }
+    }
+
+    loadCommandUsageChart() {
+        fetch('/api/command-stats')
+        .then(response => response.json())
+        .then(data => {
+            const chartContainer = document.getElementById('command-usage-chart');
+            
+            if (data.success && data.stats.length > 0) {
+                chartContainer.innerHTML = '';
+                
+                // Find max count for scaling
+                const maxCount = Math.max(...data.stats.map(stat => stat.count));
+                
+                data.stats.slice(0, 10).forEach(stat => {
+                    const percentage = (stat.count / maxCount) * 100;
+                    
+                    const usageBar = document.createElement('div');
+                    usageBar.className = 'usage-bar';
+                    usageBar.innerHTML = `
+                        <div class="usage-command">/${stat.commandName}</div>
+                        <div class="usage-progress">
+                            <div class="usage-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="usage-count">${stat.count}</div>
+                    `;
+                    
+                    chartContainer.appendChild(usageBar);
+                });
+            } else {
+                chartContainer.innerHTML = '<div class="loading-message">No command usage data available</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading command usage chart:', error);
+            document.getElementById('command-usage-chart').innerHTML = '<div class="loading-message">Error loading data</div>';
         });
     }
 

@@ -46,6 +46,18 @@ client.on(Events.InteractionCreate, async interaction => {
 
     try {
         await command.execute(interaction);
+
+        // Record command usage to database
+        try {
+            const { storage } = require('../server/storage.js');
+            await storage.recordCommandUsage({
+                guildId: interaction.guild?.id || null,
+                commandName: interaction.commandName,
+                userId: interaction.user.id
+            });
+        } catch (error) {
+            console.error("Error recording command usage:", error);
+        }
     } catch (error) {
         console.error(error);
         if (interaction.replied || interaction.deferred) {

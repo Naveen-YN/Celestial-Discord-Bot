@@ -227,6 +227,150 @@ body {
     padding: 2rem;
 }
 
+/* Analytics Section */
+.analytics-section {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.analytics-section h2 {
+    margin-bottom: 1rem;
+    color: #ffffff;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.analytics-card {
+    background: #252525;
+    border: 1px solid #333;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.analytics-card h3 {
+    color: #5865f2;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+}
+
+.analytics-content {
+    color: #b3b3b3;
+    font-size: 0.875rem;
+}
+
+.command-stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #333;
+}
+
+.command-stat-item:last-child {
+    border-bottom: none;
+}
+
+.command-stat-name {
+    color: #00aff4;
+    font-family: 'Courier New', monospace;
+}
+
+.command-stat-count {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.moderation-stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #333;
+}
+
+.moderation-stat-item:last-child {
+    border-bottom: none;
+}
+
+.moderation-action {
+    color: #ffffff;
+    text-transform: capitalize;
+}
+
+.moderation-count {
+    color: #ff6b6b;
+    font-weight: 600;
+}
+
+/* Command Usage Stats */
+.command-usage-stats {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.command-usage-stats h3 {
+    color: #5865f2;
+    margin-bottom: 1rem;
+}
+
+.chart-container {
+    background: #252525;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    min-height: 200px;
+}
+
+.usage-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    gap: 1rem;
+}
+
+.usage-bar:last-child {
+    margin-bottom: 0;
+}
+
+.usage-command {
+    min-width: 120px;
+    color: #00aff4;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+}
+
+.usage-progress {
+    flex: 1;
+    height: 8px;
+    background: #333;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.usage-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #5865f2, #00aff4);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.usage-count {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.875rem;
+    min-width: 40px;
+    text-align: right;
+}
+
 /* Stats Grid */
 .stats-grid {
     display: grid;

@@ -35,6 +35,10 @@ A comprehensive Discord bot similar to MEE6 and Dyno with advanced features incl
 - 2025-06-19: Integrated PostgreSQL database with Drizzle ORM
 - 2025-06-19: Created database schemas for guilds, welcome configs, bot settings
 - 2025-06-19: Added persistent storage for all bot configurations
+- 2025-06-19: Enhanced moderation commands with database logging
+- 2025-06-19: Added command usage tracking and analytics
+- 2025-06-19: Implemented embed template save/load functionality
+- 2025-06-19: Added visual command usage statistics
 
 ## Technical Architecture
 - **Backend**: Node.js with Discord.js v14+ and Express

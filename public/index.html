@@ -115,6 +115,24 @@
                     </div>
                 </div>
 
+                <div class="analytics-section">
+                    <h2>Analytics Overview</h2>
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <h3>Top Commands</h3>
+                            <div id="top-commands" class="analytics-content">
+                                <div class="loading-message">Loading...</div>
+                            </div>
+                        </div>
+                        <div class="analytics-card">
+                            <h3>Moderation Activity</h3>
+                            <div id="moderation-activity" class="analytics-content">
+                                <div class="loading-message">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="recent-activity">
                     <h2>Recent Activity</h2>
                     <div class="activity-list">
@@ -197,6 +215,20 @@
                                 <select id="targetChannel">
                                     <option value="">Select a channel to send embed...</option>
                                 </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="templateName">Save as Template</label>
+                                <input type="text" id="templateName" placeholder="Enter template name">
+                                <button type="button" id="saveTemplate" class="btn-secondary">Save Template</button>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Load Template</label>
+                                <select id="templateSelect">
+                                    <option value="">Select a template...</option>
+                                </select>
+                                <button type="button" id="loadTemplate" class="btn-secondary">Load Template</button>
                             </div>
                             
                             <div class="form-actions">
@@ -303,6 +335,12 @@
             <div class="tab-content" id="commands" style="display: none;">
                 <div class="commands-container">
                     <h2>Bot Commands</h2>
+                    <div class="command-usage-stats">
+                        <h3>Command Usage Statistics</h3>
+                        <div id="command-usage-chart" class="chart-container">
+                            <div class="loading-message">Loading command statistics...</div>
+                        </div>
+                    </div>
                     <div class="command-categories">
                         <div class="category">
                             <h3>Administration</h3>
