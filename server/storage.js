@@ -274,6 +274,372 @@ class DatabaseStorage {
     
     return stats;
   }
+
+  // Custom Commands Management
+  async createCustomCommand(commandData) {
+    try {
+      const query = `
+        INSERT INTO custom_commands (guild_id, command_name, description, response, response_type, embed_data, permissions, created_by)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING *
+      `;
+      
+      const values = [
+        commandData.guildId || null,
+        commandData.commandName,
+        commandData.description,
+        commandData.response,
+        commandData.responseType || 'text',
+        JSON.stringify(commandData.embedData || null),
+        commandData.permissions || 'everyone',
+        commandData.createdBy
+      ];
+      
+      const result = await this.db.query(query, values);
+      const row = result.rows[0];
+      return {
+        ...row,
+        embedData: row.embed_data ? JSON.parse(row.embed_data) : null
+      };
+    } catch (error) {
+      console.error('Error creating custom command:', error);
+      throw error;
+    }
+  }
+
+  async getCustomCommands(guildId) {
+    try {
+      const query = 'SELECT * FROM custom_commands ORDER BY created_at DESC LIMIT 20';
+      const result = await this.db.query(query);
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        commandName: row.command_name,
+        description: row.description,
+        response: row.response,
+        responseType: row.response_type,
+        embedData: row.embed_data ? JSON.parse(row.embed_data) : null,
+        permissions: row.permissions,
+        isEnabled: row.is_enabled,
+        usageCount: row.usage_count,
+        createdBy: row.created_by,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      }));
+    } catch (error) {
+      console.error('Error getting custom commands:', error);
+      return [];
+    }
+  }
+
+  async getCustomCommand(commandName, guildId) {
+    try {
+      const query = 'SELECT * FROM custom_commands WHERE command_name = $1 LIMIT 1';
+      const result = await this.db.query(query, [commandName]);
+      
+      if (result.rows.length === 0) return null;
+      
+      const row = result.rows[0];
+      return {
+        ...row,
+        embedData: row.embed_data ? JSON.parse(row.embed_data) : null
+      };
+    } catch (error) {
+      console.error('Error getting custom command:', error);
+      return null;
+    }
+  }
+
+  async updateCustomCommand(id, updates) {
+    try {
+      const fields = [];
+      const values = [];
+      let paramCount = 1;
+
+      for (const [key, value] of Object.entries(updates)) {
+        if (key === 'embedData') {
+          fields.push(`embed_data = $${paramCount}`);
+          values.push(JSON.stringify(value));
+        } else {
+          const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          fields.push(`${dbKey} = $${paramCount}`);
+          values.push(value);
+        }
+        paramCount++;
+      }
+
+      fields.push(`updated_at = NOW()`);
+      values.push(id);
+
+      const query = `
+        UPDATE custom_commands 
+        SET ${fields.join(', ')}
+        WHERE id = $${paramCount}
+        RETURNING *
+      `;
+
+      const result = await this.db.query(query, values);
+      const row = result.rows[0];
+      
+      return {
+        ...row,
+        embedData: row.embed_data ? JSON.parse(row.embed_data) : null
+      };
+    } catch (error) {
+      console.error('Error updating custom command:', error);
+      throw error;
+    }
+  }
+
+  async deleteCustomCommand(id) {
+    try {
+      const query = 'DELETE FROM custom_commands WHERE id = $1';
+      await this.db.query(query, [id]);
+    } catch (error) {
+      console.error('Error deleting custom command:', error);
+      throw error;
+    }
+  }
+
+  async incrementCommandUsage(commandName, guildId) {
+    try {
+      const query = 'UPDATE custom_commands SET usage_count = usage_count + 1 WHERE command_name = $1';
+      await this.db.query(query, [commandName]);
+    } catch (error) {
+      console.error('Error incrementing command usage:', error);
+    }
+  }
+
+  // Bot Messages Management
+  async saveBotMessage(messageData) {
+    try {
+      const query = `
+        INSERT INTO bot_messages (guild_id, channel_id, message_id, message_type, content, embed_data, sent_by)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *
+      `;
+      
+      const values = [
+        messageData.guildId,
+        messageData.channelId,
+        messageData.messageId,
+        messageData.messageType,
+        messageData.content,
+        JSON.stringify(messageData.embedData || null),
+        messageData.sentBy
+      ];
+      
+      const result = await this.db.query(query, values);
+      const row = result.rows[0];
+      
+      return {
+        ...row,
+        embedData: row.embed_data ? JSON.parse(row.embed_data) : null
+      };
+    } catch (error) {
+      console.error('Error saving bot message:', error);
+      return null;
+    }
+  }
+
+  async getBotMessages(guildId = 'current', limit = 50) {
+    try {
+      const query = 'SELECT * FROM bot_messages WHERE is_deleted = false ORDER BY sent_at DESC LIMIT $1';
+      const result = await this.db.query(query, [limit]);
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        guildId: row.guild_id,
+        channelId: row.channel_id,
+        messageId: row.message_id,
+        messageType: row.message_type,
+        content: row.content,
+        embedData: row.embed_data ? JSON.parse(row.embed_data) : null,
+        sentBy: row.sent_by,
+        sentAt: row.sent_at,
+        lastEditedAt: row.last_edited_at,
+        isDeleted: row.is_deleted
+      }));
+    } catch (error) {
+      console.error('Error getting bot messages:', error);
+      return [];
+    }
+  }
+
+  async getBotMessage(messageId) {
+    try {
+      const query = 'SELECT * FROM bot_messages WHERE message_id = $1';
+      const result = await this.db.query(query, [messageId]);
+      
+      if (result.rows.length === 0) return null;
+      
+      const row = result.rows[0];
+      return {
+        ...row,
+        embedData: row.embed_data ? JSON.parse(row.embed_data) : null
+      };
+    } catch (error) {
+      console.error('Error getting bot message:', error);
+      return null;
+    }
+  }
+
+  async updateBotMessage(messageId, updates) {
+    try {
+      const fields = [];
+      const values = [];
+      let paramCount = 1;
+
+      for (const [key, value] of Object.entries(updates)) {
+        if (key === 'embedData') {
+          fields.push(`embed_data = $${paramCount}`);
+          values.push(JSON.stringify(value));
+        } else {
+          const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          fields.push(`${dbKey} = $${paramCount}`);
+          values.push(value);
+        }
+        paramCount++;
+      }
+
+      fields.push(`last_edited_at = NOW()`);
+      values.push(messageId);
+
+      const query = `
+        UPDATE bot_messages 
+        SET ${fields.join(', ')}
+        WHERE message_id = $${paramCount}
+        RETURNING *
+      `;
+
+      const result = await this.db.query(query, values);
+      const row = result.rows[0];
+      
+      return {
+        ...row,
+        embedData: row.embed_data ? JSON.parse(row.embed_data) : null
+      };
+    } catch (error) {
+      console.error('Error updating bot message:', error);
+      throw error;
+    }
+  }
+
+  async deleteBotMessage(messageId) {
+    try {
+      const query = 'UPDATE bot_messages SET is_deleted = true WHERE message_id = $1';
+      await this.db.query(query, [messageId]);
+    } catch (error) {
+      console.error('Error deleting bot message:', error);
+      throw error;
+    }
+  }
+
+  // Server Logs Management
+  async getServerLogs(guildId = 'current', type = 'all', date = null, limit = 100) {
+    try {
+      // Return real-time log data from moderation_logs and command_stats
+      let queries = [];
+      
+      // Get moderation logs
+      queries.push(`
+        SELECT 
+          'moderation' as type,
+          action,
+          target_user_id as target,
+          moderator_id as moderator,
+          reason,
+          created_at as timestamp,
+          CONCAT('Moderation: ', action, COALESCE(' - ' || reason, '')) as details
+        FROM moderation_logs
+        ORDER BY created_at DESC
+        LIMIT 20
+      `);
+
+      // Get command usage logs
+      queries.push(`
+        SELECT 
+          'commands' as type,
+          command_name as action,
+          user_id as target,
+          NULL as moderator,
+          NULL as reason,
+          used_at as timestamp,
+          CONCAT('Command: /', command_name) as details
+        FROM command_stats
+        ORDER BY used_at DESC
+        LIMIT 20
+      `);
+
+      let allLogs = [];
+      
+      for (const query of queries) {
+        try {
+          const result = await this.db.query(query);
+          allLogs = allLogs.concat(result.rows);
+        } catch (error) {
+          console.error('Error executing log query:', error);
+        }
+      }
+
+      // Sort by timestamp and limit
+      allLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      
+      return allLogs.slice(0, limit);
+    } catch (error) {
+      console.error('Error getting server logs:', error);
+      return [];
+    }
+  }
+
+  async getLogsStats(guildId = 'current') {
+    try {
+      const stats = {};
+
+      // Get moderation actions count
+      const modQuery = 'SELECT COUNT(*) as count FROM moderation_logs';
+      const modResult = await this.db.query(modQuery);
+      stats.moderationActions = parseInt(modResult.rows[0]?.count || 0);
+      stats.totalLogs = stats.moderationActions;
+
+      // Get active warnings count
+      const warnQuery = 'SELECT COUNT(*) as count FROM user_warnings WHERE is_active = true';
+      const warnResult = await this.db.query(warnQuery);
+      stats.activeWarnings = parseInt(warnResult.rows[0]?.count || 0);
+
+      // Get commands today count
+      const cmdQuery = 'SELECT COUNT(*) as count FROM command_stats WHERE DATE(used_at) = CURRENT_DATE';
+      const cmdResult = await this.db.query(cmdQuery);
+      stats.commandsToday = parseInt(cmdResult.rows[0]?.count || 0);
+
+      return stats;
+    } catch (error) {
+      console.error('Error getting logs stats:', error);
+      return {
+        totalLogs: 0,
+        moderationActions: 0,
+        activeWarnings: 0,
+        commandsToday: 0
+      };
+    }
+  }
+
+  async clearServerLogs(guildId) {
+    try {
+      const queries = [
+        'DELETE FROM moderation_logs',
+        'DELETE FROM command_stats',
+        'UPDATE user_warnings SET is_active = false'
+      ];
+
+      for (const query of queries) {
+        await this.db.query(query);
+      }
+    } catch (error) {
+      console.error('Error clearing server logs:', error);
+      throw error;
+    }
+  }
 }
 
 const storage = new DatabaseStorage();
