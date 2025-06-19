@@ -295,7 +295,7 @@ class DatabaseStorage {
         commandData.createdBy
       ];
       
-      const result = await this.db.query(query, values);
+      const result = await db.query(query, values);
       const row = result.rows[0];
       return {
         ...row,
@@ -310,7 +310,7 @@ class DatabaseStorage {
   async getCustomCommands(guildId) {
     try {
       const query = 'SELECT * FROM custom_commands ORDER BY created_at DESC LIMIT 20';
-      const result = await this.db.query(query);
+      const result = await db.query(query);
       
       return result.rows.map(row => ({
         id: row.id,
@@ -335,7 +335,7 @@ class DatabaseStorage {
   async getCustomCommand(commandName, guildId) {
     try {
       const query = 'SELECT * FROM custom_commands WHERE command_name = $1 LIMIT 1';
-      const result = await this.db.query(query, [commandName]);
+      const result = await db.query(query, [commandName]);
       
       if (result.rows.length === 0) return null;
       
@@ -378,7 +378,7 @@ class DatabaseStorage {
         RETURNING *
       `;
 
-      const result = await this.db.query(query, values);
+      const result = await db.query(query, values);
       const row = result.rows[0];
       
       return {
@@ -394,7 +394,7 @@ class DatabaseStorage {
   async deleteCustomCommand(id) {
     try {
       const query = 'DELETE FROM custom_commands WHERE id = $1';
-      await this.db.query(query, [id]);
+      await db.query(query, [id]);
     } catch (error) {
       console.error('Error deleting custom command:', error);
       throw error;
@@ -404,7 +404,7 @@ class DatabaseStorage {
   async incrementCommandUsage(commandName, guildId) {
     try {
       const query = 'UPDATE custom_commands SET usage_count = usage_count + 1 WHERE command_name = $1';
-      await this.db.query(query, [commandName]);
+      await db.query(query, [commandName]);
     } catch (error) {
       console.error('Error incrementing command usage:', error);
     }
@@ -429,7 +429,7 @@ class DatabaseStorage {
         messageData.sentBy
       ];
       
-      const result = await this.db.query(query, values);
+      const result = await db.query(query, values);
       const row = result.rows[0];
       
       return {
@@ -445,7 +445,7 @@ class DatabaseStorage {
   async getBotMessages(guildId = 'current', limit = 50) {
     try {
       const query = 'SELECT * FROM bot_messages WHERE is_deleted = false ORDER BY sent_at DESC LIMIT $1';
-      const result = await this.db.query(query, [limit]);
+      const result = await db.query(query, [limit]);
       
       return result.rows.map(row => ({
         id: row.id,
@@ -469,7 +469,7 @@ class DatabaseStorage {
   async getBotMessage(messageId) {
     try {
       const query = 'SELECT * FROM bot_messages WHERE message_id = $1';
-      const result = await this.db.query(query, [messageId]);
+      const result = await db.query(query, [messageId]);
       
       if (result.rows.length === 0) return null;
       
@@ -512,7 +512,7 @@ class DatabaseStorage {
         RETURNING *
       `;
 
-      const result = await this.db.query(query, values);
+      const result = await db.query(query, values);
       const row = result.rows[0];
       
       return {
@@ -528,7 +528,7 @@ class DatabaseStorage {
   async deleteBotMessage(messageId) {
     try {
       const query = 'UPDATE bot_messages SET is_deleted = true WHERE message_id = $1';
-      await this.db.query(query, [messageId]);
+      await db.query(query, [messageId]);
     } catch (error) {
       console.error('Error deleting bot message:', error);
       throw error;
@@ -575,7 +575,7 @@ class DatabaseStorage {
       
       for (const query of queries) {
         try {
-          const result = await this.db.query(query);
+          const result = await db.query(query);
           allLogs = allLogs.concat(result.rows);
         } catch (error) {
           console.error('Error executing log query:', error);
@@ -598,18 +598,18 @@ class DatabaseStorage {
 
       // Get moderation actions count
       const modQuery = 'SELECT COUNT(*) as count FROM moderation_logs';
-      const modResult = await this.db.query(modQuery);
+      const modResult = await db.query(modQuery);
       stats.moderationActions = parseInt(modResult.rows[0]?.count || 0);
       stats.totalLogs = stats.moderationActions;
 
       // Get active warnings count
       const warnQuery = 'SELECT COUNT(*) as count FROM user_warnings WHERE is_active = true';
-      const warnResult = await this.db.query(warnQuery);
+      const warnResult = await db.query(warnQuery);
       stats.activeWarnings = parseInt(warnResult.rows[0]?.count || 0);
 
       // Get commands today count
       const cmdQuery = 'SELECT COUNT(*) as count FROM command_stats WHERE DATE(used_at) = CURRENT_DATE';
-      const cmdResult = await this.db.query(cmdQuery);
+      const cmdResult = await db.query(cmdQuery);
       stats.commandsToday = parseInt(cmdResult.rows[0]?.count || 0);
 
       return stats;
@@ -633,7 +633,7 @@ class DatabaseStorage {
       ];
 
       for (const query of queries) {
-        await this.db.query(query);
+        await db.query(query);
       }
     } catch (error) {
       console.error('Error clearing server logs:', error);

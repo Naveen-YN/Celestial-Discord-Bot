@@ -918,6 +918,54 @@ input:checked + .toggle-slider:before {
     content: "ℹ️ ";
 }
 
+/* Message Type Selector */
+.message-type-selector {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #252525;
+    border-radius: 0.5rem;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.radio-option input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #5865f2;
+}
+
+.text-message-form {
+    background: #252525;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.text-message-form textarea {
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    color: #ffffff;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+#embed-form {
+    display: none;
+}
+
 /* Stats Grid */
 .stats-grid {
     display: grid;

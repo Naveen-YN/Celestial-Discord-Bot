@@ -790,6 +790,56 @@ class BotDashboard {
         }
     }
 
+    toggleMessageType() {
+        const messageType = document.querySelector('input[name="messageType"]:checked').value;
+        const textForm = document.getElementById('text-message-form');
+        const embedForm = document.getElementById('embed-form');
+        
+        if (messageType === 'text') {
+            textForm.style.display = 'block';
+            embedForm.style.display = 'none';
+        } else {
+            textForm.style.display = 'none';
+            embedForm.style.display = 'block';
+        }
+    }
+
+    async sendTextMessage() {
+        const content = document.getElementById('textMessage').value;
+        const channelId = document.getElementById('channelSelect').value;
+        
+        if (!content || !channelId) {
+            this.showNotification('Please enter message content and select a channel', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/send-text-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content,
+                    channelId
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification('Message sent successfully!', 'success');
+                document.getElementById('textMessage').value = '';
+                // Refresh bot messages if on that tab
+                if (document.getElementById('messages').style.display !== 'none') {
+                    this.loadBotMessages();
+                }
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            this.showNotification(`Error: ${error.message}`, 'error');
+        }
+    }
+
     closeCommandModal() {
         document.getElementById('command-modal').style.display = 'none';
         this.currentEditingCommand = null;
