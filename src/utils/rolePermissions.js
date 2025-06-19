@@ -18,38 +18,45 @@ const COMMAND_PERMISSIONS = {
     'announcement': ROLE_HIERARCHY.ADMIN,
     'refresh': ROLE_HIERARCHY.ADMIN,
     'lockdown': ROLE_HIERARCHY.ADMIN,
+    'permissions': ROLE_HIERARCHY.ADMIN,
     
     // Moderator and above commands
     'ban': ROLE_HIERARCHY.MODERATOR,
     'kick': ROLE_HIERARCHY.MODERATOR,
+    'purge': ROLE_HIERARCHY.MODERATOR,
+    'setrole': ROLE_HIERARCHY.MODERATOR,
+    
+    // Junior Mod and above commands
     'timeout': ROLE_HIERARCHY.JUNIOR_MOD,
     'warn': ROLE_HIERARCHY.JUNIOR_MOD,
-    'purge': ROLE_HIERARCHY.MODERATOR,
     
     // Helper and above commands
     'welcome': ROLE_HIERARCHY.HELPER,
     'autorole': ROLE_HIERARCHY.HELPER,
+    'embed': ROLE_HIERARCHY.HELPER,
+    
+    // Member and above commands
+    'serverinfo': ROLE_HIERARCHY.MEMBER,
+    'channelinfo': ROLE_HIERARCHY.MEMBER,
+    'role': ROLE_HIERARCHY.MEMBER,
+    'stats': ROLE_HIERARCHY.MEMBER,
     
     // Everyone can use
     'ping': ROLE_HIERARCHY.EVERYONE,
     'help': ROLE_HIERARCHY.EVERYONE,
     'avatar': ROLE_HIERARCHY.EVERYONE,
     'userinfo': ROLE_HIERARCHY.EVERYONE,
-    'serverinfo': ROLE_HIERARCHY.MEMBER,
-    'channelinfo': ROLE_HIERARCHY.MEMBER,
-    'role': ROLE_HIERARCHY.MEMBER,
-    'stats': ROLE_HIERARCHY.MEMBER,
-    'embed': ROLE_HIERARCHY.HELPER
+    'roletest': ROLE_HIERARCHY.EVERYONE // Temporary testing command
 };
 
 // Default role names that map to hierarchy levels
 const DEFAULT_ROLE_NAMES = {
-    [ROLE_HIERARCHY.ADMIN]: ['admin', 'administrator', 'owner'],
-    [ROLE_HIERARCHY.MODERATOR]: ['moderator', 'mod', 'staff'],
-    [ROLE_HIERARCHY.SENIOR_MOD]: ['senior mod', 'senior moderator', 'head mod'],
-    [ROLE_HIERARCHY.JUNIOR_MOD]: ['junior mod', 'trial mod', 'trainee mod'],
-    [ROLE_HIERARCHY.HELPER]: ['helper', 'support', 'assistant'],
-    [ROLE_HIERARCHY.MEMBER]: ['member', 'verified', 'regular']
+    [ROLE_HIERARCHY.ADMIN]: ['admin', 'administrator', 'owner', 'manager', 'leader'],
+    [ROLE_HIERARCHY.MODERATOR]: ['moderator', 'mod', 'staff', 'guardian'],
+    [ROLE_HIERARCHY.SENIOR_MOD]: ['senior mod', 'senior moderator', 'head mod', 'senior staff'],
+    [ROLE_HIERARCHY.JUNIOR_MOD]: ['junior mod', 'trial mod', 'trainee mod', 'junior staff', 'trainee'],
+    [ROLE_HIERARCHY.HELPER]: ['helper', 'support', 'assistant', 'volunteer', 'guide'],
+    [ROLE_HIERARCHY.MEMBER]: ['member', 'verified', 'regular', 'user', 'citizen']
 };
 
 /**

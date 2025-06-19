@@ -4,20 +4,22 @@
 A comprehensive Discord bot similar to MEE6 and Dyno with advanced features including moderation commands, utility functions, administrative tools, and a web-based dashboard for bot management.
 
 ## Current Status
-- ✅ Discord bot with 19+ slash commands across multiple categories
+- ✅ Discord bot with 23+ slash commands across multiple categories
 - ✅ Express server running on port 5000
 - ✅ Web dashboard with embed builder and bot management features
 - ✅ Real-time bot statistics and activity monitoring
 - ✅ Welcome message configuration system
-- ✅ Canvas integration for custom welcome images
+- ✅ PostgreSQL database with comprehensive logging
+- ✅ Role-based command permissions system
+- ✅ Automatic role hierarchy detection
 
 ## Features
 
 ### Discord Bot Commands
-- **Administration**: announcement, autorole, lockdown, welcome, refresh
-- **Moderation**: ban, kick, timeout, warn, purge
-- **Utility**: ping, help, avatar, userinfo, serverinfo, channelinfo, role, stats
-- **Tools**: embed builder
+- **Administration**: announcement, autorole, lockdown, welcome, refresh, permissions, configroles
+- **Moderation**: ban, kick, timeout, warn, purge, setrole
+- **Utility**: ping, help, avatar, userinfo, serverinfo, channelinfo, role, stats, roletest
+- **Tools**: embed builder with templates
 
 ### Web Dashboard
 - **Overview**: Real-time bot statistics, server count, user count, uptime
