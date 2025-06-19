@@ -2,6 +2,7 @@ modules = ["nodejs-20", "postgresql-16"]
 
 [nix]
 channel = "stable-24_05"
+packages = ["postgresql"]
 
 [workflows]
 runButton = "Project"

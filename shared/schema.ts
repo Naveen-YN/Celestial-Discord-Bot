@@ -167,3 +167,9 @@ export type InsertAutoRoleConfig = typeof autoRoleConfigs.$inferInsert;
 
 export type CommandStat = typeof commandStats.$inferSelect;
 export type InsertCommandStat = typeof commandStats.$inferInsert;
+
+export type CustomCommand = typeof customCommands.$inferSelect;
+export type InsertCustomCommand = typeof customCommands.$inferInsert;
+
+export type BotMessage = typeof botMessages.$inferSelect;
+export type InsertBotMessage = typeof botMessages.$inferInsert;

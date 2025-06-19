@@ -41,6 +41,10 @@ class BotDashboard {
                     this.loadCommandUsageChart();
                 } else if (targetTab === 'settings') {
                     this.loadRolePermissions();
+                } else if (targetTab === 'custom-commands') {
+                    this.loadCustomCommands();
+                } else if (targetTab === 'messages') {
+                    this.loadBotMessages();
                 }
             });
         });
@@ -676,6 +680,348 @@ class BotDashboard {
         });
     }
 
+    // Custom Commands Management
+    loadCustomCommands() {
+        fetch('/api/custom-commands')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.displayCustomCommands(data.commands);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading custom commands:', error);
+            document.getElementById('custom-commands-list').innerHTML = '<div class="error-message">Error loading commands</div>';
+        });
+    }
+
+    displayCustomCommands(commands) {
+        const container = document.getElementById('custom-commands-list');
+        
+        if (!commands || commands.length === 0) {
+            container.innerHTML = '<div class="empty-state">No custom commands created yet. Click "Create Command" to get started!</div>';
+            return;
+        }
+
+        container.innerHTML = commands.map(command => `
+            <div class="command-card" data-command-id="${command.id}">
+                <div class="command-header">
+                    <div class="command-info">
+                        <h4>/${command.commandName}</h4>
+                        <p>${command.description || 'No description'}</p>
+                    </div>
+                    <div class="command-actions">
+                        <span class="command-usage">${command.usageCount} uses</span>
+                        <span class="command-permission">${command.permissions}</span>
+                        <button class="btn btn-small btn-secondary" onclick="dashboard.editCommand(${command.id})">Edit</button>
+                        <button class="btn btn-small btn-danger" onclick="dashboard.deleteCommand(${command.id})">Delete</button>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${command.isEnabled ? 'checked' : ''} onchange="dashboard.toggleCommand(${command.id}, this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="command-preview">
+                    <strong>Response:</strong> 
+                    ${command.responseType === 'embed' 
+                        ? `<span class="embed-preview">Embed: ${command.embedData?.title || 'Untitled'}</span>`
+                        : `<span class="text-preview">${command.response.substring(0, 100)}${command.response.length > 100 ? '...' : ''}</span>`
+                    }
+                </div>
+            </div>
+        `).join('');
+    }
+
+    showCreateCommandModal() {
+        document.getElementById('command-modal-title').textContent = 'Create Custom Command';
+        document.getElementById('command-form').reset();
+        document.getElementById('command-modal').style.display = 'flex';
+        this.currentEditingCommand = null;
+    }
+
+    editCommand(commandId) {
+        // Find command data and populate form
+        fetch('/api/custom-commands')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const command = data.commands.find(c => c.id === commandId);
+                if (command) {
+                    this.populateCommandForm(command);
+                    document.getElementById('command-modal-title').textContent = 'Edit Custom Command';
+                    document.getElementById('command-modal').style.display = 'flex';
+                    this.currentEditingCommand = commandId;
+                }
+            }
+        });
+    }
+
+    populateCommandForm(command) {
+        document.getElementById('command-name').value = command.commandName;
+        document.getElementById('command-description').value = command.description || '';
+        document.getElementById('command-response-type').value = command.responseType;
+        document.getElementById('command-permissions').value = command.permissions;
+        
+        if (command.responseType === 'embed' && command.embedData) {
+            document.getElementById('embed-title').value = command.embedData.title || '';
+            document.getElementById('embed-description').value = command.embedData.description || '';
+            document.getElementById('embed-color').value = command.embedData.color || '#5865f2';
+            document.getElementById('embed-thumbnail').value = command.embedData.thumbnail?.url || '';
+        } else {
+            document.getElementById('command-response').value = command.response;
+        }
+        
+        this.toggleResponseType();
+    }
+
+    toggleResponseType() {
+        const responseType = document.getElementById('command-response-type').value;
+        const textGroup = document.getElementById('text-response-group');
+        const embedGroup = document.getElementById('embed-response-group');
+        
+        if (responseType === 'embed') {
+            textGroup.style.display = 'none';
+            embedGroup.style.display = 'block';
+        } else {
+            textGroup.style.display = 'block';
+            embedGroup.style.display = 'none';
+        }
+    }
+
+    closeCommandModal() {
+        document.getElementById('command-modal').style.display = 'none';
+        this.currentEditingCommand = null;
+    }
+
+    async saveCommand(formData) {
+        const commandData = {
+            commandName: formData.get('command-name'),
+            description: formData.get('command-description'),
+            responseType: formData.get('response-type'),
+            permissions: formData.get('permissions'),
+            createdBy: 'dashboard' // You might want to track the actual user
+        };
+
+        if (commandData.responseType === 'embed') {
+            commandData.embedData = {
+                title: document.getElementById('embed-title').value,
+                description: document.getElementById('embed-description').value,
+                color: document.getElementById('embed-color').value,
+                thumbnail: document.getElementById('embed-thumbnail').value ? 
+                    { url: document.getElementById('embed-thumbnail').value } : null
+            };
+            commandData.response = 'Embed message';
+        } else {
+            commandData.response = formData.get('response');
+        }
+
+        const url = this.currentEditingCommand 
+            ? `/api/custom-commands/${this.currentEditingCommand}`
+            : '/api/custom-commands';
+        
+        const method = this.currentEditingCommand ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(commandData)
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification(`Command ${this.currentEditingCommand ? 'updated' : 'created'} successfully!`, 'success');
+                this.closeCommandModal();
+                this.loadCustomCommands();
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            this.showNotification(`Error: ${error.message}`, 'error');
+        }
+    }
+
+    async deleteCommand(commandId) {
+        if (!confirm('Are you sure you want to delete this command?')) return;
+
+        try {
+            const response = await fetch(`/api/custom-commands/${commandId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification('Command deleted successfully!', 'success');
+                this.loadCustomCommands();
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            this.showNotification(`Error: ${error.message}`, 'error');
+        }
+    }
+
+    async toggleCommand(commandId, isEnabled) {
+        try {
+            const response = await fetch(`/api/custom-commands/${commandId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isEnabled })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification(`Command ${isEnabled ? 'enabled' : 'disabled'}!`, 'success');
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            this.showNotification(`Error: ${error.message}`, 'error');
+        }
+    }
+
+    // Bot Messages Management
+    loadBotMessages() {
+        const guildId = 'current'; // You might want to make this dynamic
+        fetch(`/api/bot-messages?guildId=${guildId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.displayBotMessages(data.messages);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading bot messages:', error);
+            document.getElementById('messages-list').innerHTML = '<div class="error-message">Error loading messages</div>';
+        });
+    }
+
+    displayBotMessages(messages) {
+        const container = document.getElementById('messages-list');
+        
+        if (!messages || messages.length === 0) {
+            container.innerHTML = '<div class="empty-state">No bot messages found.</div>';
+            return;
+        }
+
+        container.innerHTML = messages.map(message => `
+            <div class="message-card" data-message-id="${message.messageId}">
+                <div class="message-header">
+                    <div class="message-info">
+                        <h4>${message.messageType.replace('_', ' ').toUpperCase()}</h4>
+                        <p class="message-timestamp">${new Date(message.sentAt).toLocaleString()}</p>
+                    </div>
+                    <div class="message-actions">
+                        <button class="btn btn-small btn-secondary" onclick="dashboard.editMessage('${message.messageId}')">Edit</button>
+                        <button class="btn btn-small btn-danger" onclick="dashboard.deleteMessage('${message.messageId}')">Delete</button>
+                    </div>
+                </div>
+                <div class="message-content">
+                    ${message.content || ''}
+                    ${message.embedData ? '<div class="embed-indicator">📎 Contains embed</div>' : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    editMessage(messageId) {
+        // Fetch message data and show edit modal
+        fetch(`/api/bot-messages?messageId=${messageId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.messages.length > 0) {
+                const message = data.messages[0];
+                this.populateMessageForm(message);
+                document.getElementById('message-modal').style.display = 'flex';
+                this.currentEditingMessage = messageId;
+            }
+        });
+    }
+
+    populateMessageForm(message) {
+        document.getElementById('edit-message-content').value = message.content || '';
+        
+        if (message.embedData) {
+            document.getElementById('edit-embed-group').style.display = 'block';
+            document.getElementById('edit-embed-title').value = message.embedData.title || '';
+            document.getElementById('edit-embed-description').value = message.embedData.description || '';
+            document.getElementById('edit-embed-color').value = message.embedData.color || '#5865f2';
+        } else {
+            document.getElementById('edit-embed-group').style.display = 'none';
+        }
+    }
+
+    closeMessageModal() {
+        document.getElementById('message-modal').style.display = 'none';
+        this.currentEditingMessage = null;
+    }
+
+    async updateMessage(formData) {
+        const updateData = {
+            content: formData.get('message-content')
+        };
+
+        const embedTitle = document.getElementById('edit-embed-title').value;
+        const embedDescription = document.getElementById('edit-embed-description').value;
+        
+        if (embedTitle || embedDescription) {
+            updateData.embedData = {
+                title: embedTitle,
+                description: embedDescription,
+                color: document.getElementById('edit-embed-color').value
+            };
+        }
+
+        try {
+            const response = await fetch(`/api/bot-messages/${this.currentEditingMessage}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateData)
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification('Message updated successfully!', 'success');
+                this.closeMessageModal();
+                this.loadBotMessages();
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            this.showNotification(`Error: ${error.message}`, 'error');
+        }
+    }
+
+    async deleteMessage(messageId = this.currentEditingMessage) {
+        if (!confirm('Are you sure you want to delete this message?')) return;
+
+        try {
+            const response = await fetch(`/api/bot-messages/${messageId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification('Message deleted successfully!', 'success');
+                if (this.currentEditingMessage) this.closeMessageModal();
+                this.loadBotMessages();
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            this.showNotification(`Error: ${error.message}`, 'error');
+        }
+    }
+
+    refreshMessages() {
+        this.loadBotMessages();
+    }
+
     formatUptime(seconds) {
         const days = Math.floor(seconds / 86400);
         const hours = Math.floor((seconds % 86400) / 3600);
@@ -698,6 +1044,39 @@ class BotDashboard {
         if (saveSettingsBtn) {
             saveSettingsBtn.addEventListener('click', () => {
                 this.saveSettings();
+            });
+        }
+
+        if (resetSettingsBtn) {
+            resetSettingsBtn.addEventListener('click', () => {
+                this.resetSettings();
+            });
+        }
+
+        // Form submissions
+        const welcomeForm = document.getElementById('welcome-form');
+        if (welcomeForm) {
+            welcomeForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveWelcomeConfig();
+            });
+        }
+
+        const commandForm = document.getElementById('command-form');
+        if (commandForm) {
+            commandForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                this.saveCommand(formData);
+            });
+        }
+
+        const messageEditForm = document.getElementById('message-edit-form');
+        if (messageEditForm) {
+            messageEditForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                this.updateMessage(formData);
             });
         }
 

@@ -12,6 +12,8 @@ A comprehensive Discord bot similar to MEE6 and Dyno with advanced features incl
 - ✅ PostgreSQL database with comprehensive logging
 - ✅ Role-based command permissions system
 - ✅ Automatic role hierarchy detection
+- ✅ Custom command builder with dashboard interface
+- ✅ Bot message management and editing capabilities
 
 ## Features
 
@@ -20,12 +22,15 @@ A comprehensive Discord bot similar to MEE6 and Dyno with advanced features incl
 - **Moderation**: ban, kick, timeout, warn, purge, setrole
 - **Utility**: ping, help, avatar, userinfo, serverinfo, channelinfo, role, stats, roletest
 - **Tools**: embed builder with templates
+- **Custom Commands**: User-created commands with role permissions and embed support
 
 ### Web Dashboard
 - **Overview**: Real-time bot statistics, server count, user count, uptime
 - **Embed Builder**: Visual embed creator with live preview, field management, export functionality
 - **Welcome Configuration**: Custom welcome messages with variable support
 - **Command Management**: View all available commands by category
+- **Custom Commands**: Create, edit, and manage custom slash commands with permissions
+- **Bot Messages**: View, edit, and delete messages sent by the bot
 - **Settings**: Bot presence, activity, and permission management
 
 ## Recent Changes
@@ -44,6 +49,9 @@ A comprehensive Discord bot similar to MEE6 and Dyno with advanced features incl
 - 2025-06-19: Implemented role-based command permissions system
 - 2025-06-19: Added automatic role hierarchy detection
 - 2025-06-19: Created permissions management command
+- 2025-06-19: Built custom command builder with dashboard interface
+- 2025-06-19: Added bot message management and editing capabilities
+- 2025-06-19: Integrated custom commands with permission system and database tracking
 
 ## Technical Architecture
 - **Backend**: Node.js with Discord.js v14+ and Express

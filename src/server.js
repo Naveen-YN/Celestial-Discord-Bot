@@ -435,6 +435,121 @@ app.get('/api/role-permissions', (req, res) => {
     }
 });
 
+// Custom Commands API
+app.get('/api/custom-commands', async (req, res) => {
+    try {
+        const { guildId } = req.query;
+        const commands = await storage.getCustomCommands(guildId);
+        res.json({ success: true, commands });
+    } catch (error) {
+        console.error('Error getting custom commands:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
+app.post('/api/custom-commands', async (req, res) => {
+    try {
+        const commandData = req.body;
+        const command = await storage.createCustomCommand(commandData);
+        res.json({ success: true, command });
+    } catch (error) {
+        console.error('Error creating custom command:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
+app.put('/api/custom-commands/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        const command = await storage.updateCustomCommand(parseInt(id), updates);
+        res.json({ success: true, command });
+    } catch (error) {
+        console.error('Error updating custom command:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
+app.delete('/api/custom-commands/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await storage.deleteCustomCommand(parseInt(id));
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting custom command:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
+// Bot Messages API
+app.get('/api/bot-messages', async (req, res) => {
+    try {
+        const { guildId, limit } = req.query;
+        const messages = await storage.getBotMessages(guildId, parseInt(limit) || 50);
+        res.json({ success: true, messages });
+    } catch (error) {
+        console.error('Error getting bot messages:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
+app.put('/api/bot-messages/:messageId', async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const updates = req.body;
+        
+        // Update in database
+        const message = await storage.updateBotMessage(messageId, updates);
+        
+        // Update Discord message if bot is available
+        if (global.discordClient) {
+            const channel = await global.discordClient.channels.fetch(message.channelId);
+            if (channel) {
+                const discordMessage = await channel.messages.fetch(messageId);
+                if (discordMessage) {
+                    await discordMessage.edit({
+                        content: updates.content || null,
+                        embeds: updates.embedData ? [updates.embedData] : []
+                    });
+                }
+            }
+        }
+        
+        res.json({ success: true, message });
+    } catch (error) {
+        console.error('Error updating bot message:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
+app.delete('/api/bot-messages/:messageId', async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        
+        // Delete from database
+        await storage.deleteBotMessage(messageId);
+        
+        // Delete Discord message if bot is available
+        if (global.discordClient) {
+            const message = await storage.getBotMessage(messageId);
+            if (message) {
+                const channel = await global.discordClient.channels.fetch(message.channelId);
+                if (channel) {
+                    const discordMessage = await channel.messages.fetch(messageId);
+                    if (discordMessage && discordMessage.deletable) {
+                        await discordMessage.delete();
+                    }
+                }
+            }
+        }
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting bot message:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
 // Server status endpoint
 app.get('/status', (req, res) => {
     res.json({

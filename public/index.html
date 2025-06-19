@@ -461,6 +461,46 @@
                 </div>
             </div>
 
+            <div class="tab-content" id="custom-commands" style="display: none;">
+                <div class="commands-container">
+                    <div class="section-header">
+                        <h2>Custom Commands</h2>
+                        <button class="btn btn-primary" onclick="dashboard.showCreateCommandModal()">
+                            <span class="btn-icon">➕</span>
+                            Create Command
+                        </button>
+                    </div>
+
+                    <div class="custom-commands-list" id="custom-commands-list">
+                        <div class="loading-message">Loading custom commands...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="messages" style="display: none;">
+                <div class="messages-container">
+                    <div class="section-header">
+                        <h2>Bot Messages</h2>
+                        <div class="message-filters">
+                            <select id="message-type-filter">
+                                <option value="all">All Messages</option>
+                                <option value="embed">Embeds</option>
+                                <option value="announcement">Announcements</option>
+                                <option value="custom_command">Custom Commands</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="dashboard.refreshMessages()">
+                                <span class="btn-icon">🔄</span>
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="messages-list" id="messages-list">
+                        <div class="loading-message">Loading bot messages...</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="tab-content" id="settings" style="display: none;">
                 <div class="settings-container">
                     <h2>Bot Settings</h2>

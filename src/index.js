@@ -13,6 +13,9 @@ const client = new Client({
     ]
 });
 
+// Make client globally available for message editing
+global.discordClient = client;
+
 client.commands = new Collection();
 
 // Load commands from commands directory
@@ -40,6 +43,70 @@ client.on(Events.InteractionCreate, async interaction => {
     const command = interaction.client.commands.get(interaction.commandName);
 
     if (!command) {
+        // Check for custom commands
+        try {
+            const { storage } = require('../server/storage.js');
+            const customCommand = await storage.getCustomCommand(interaction.commandName, interaction.guild?.id);
+            
+            if (customCommand && customCommand.isEnabled) {
+                // Check permissions for custom command
+                const { getMemberRoleLevel, ROLE_HIERARCHY } = require('./utils/rolePermissions.js');
+                
+                const requiredLevel = ROLE_HIERARCHY[customCommand.permissions.toUpperCase()] || ROLE_HIERARCHY.EVERYONE;
+                
+                if (interaction.guild) {
+                    const member = interaction.guild.members.cache.get(interaction.user.id);
+                    const userLevel = getMemberRoleLevel(member);
+                    
+                    if (userLevel < requiredLevel) {
+                        await interaction.reply({
+                            content: `You don't have permission to use this command. Required: ${customCommand.permissions}`,
+                            flags: MessageFlags.Ephemeral
+                        });
+                        return;
+                    }
+                }
+
+                // Execute custom command
+                let replyContent = {};
+                if (customCommand.responseType === 'embed' && customCommand.embedData) {
+                    const embed = new EmbedBuilder(customCommand.embedData);
+                    replyContent = { embeds: [embed] };
+                } else {
+                    replyContent = { content: customCommand.response };
+                }
+
+                const reply = await interaction.reply(replyContent);
+
+                // Save bot message to database
+                try {
+                    await storage.saveBotMessage({
+                        guildId: interaction.guild.id,
+                        channelId: interaction.channel.id,
+                        messageId: reply.id,
+                        messageType: 'custom_command',
+                        content: customCommand.responseType === 'text' ? customCommand.response : null,
+                        embedData: customCommand.responseType === 'embed' ? customCommand.embedData : null,
+                        sentBy: client.user.id
+                    });
+                } catch (error) {
+                    console.error("Error saving bot message:", error);
+                }
+
+                // Increment usage count and record stats
+                await storage.incrementCommandUsage(interaction.commandName, interaction.guild?.id);
+                await storage.recordCommandUsage({
+                    guildId: interaction.guild?.id || null,
+                    commandName: interaction.commandName,
+                    userId: interaction.user.id
+                });
+
+                return;
+            }
+        } catch (error) {
+            console.error("Error checking custom commands:", error);
+        }
+
         console.error(`No command matching ${interaction.commandName} was found.`);
         return;
     }
