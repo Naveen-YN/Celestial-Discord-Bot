@@ -221,4 +221,4 @@ client.once(Events.ClientReady, async c => {
     }
 });
 
-client.login(process.env.DISCORD_TOKEN);
+client.login("MTEzNDc5ODIwNDQ2Mjk2MDY2MA.GzmImj.LrLakVhiuZqNESWS3QDAjhQKlZT850yqh55sF4");
