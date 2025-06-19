@@ -45,6 +45,24 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 
     try {
+        // Check role-based permissions
+        const { hasCommandPermission, getRequiredRoleLevel, getMemberRoleLevel, createPermissionErrorEmbed } = require('./utils/rolePermissions.js');
+        
+        if (interaction.guild) {
+            const member = interaction.guild.members.cache.get(interaction.user.id);
+            if (member && !hasCommandPermission(member, interaction.commandName)) {
+                const userLevel = getMemberRoleLevel(member);
+                const requiredLevel = getRequiredRoleLevel(interaction.commandName);
+                const errorEmbed = createPermissionErrorEmbed(interaction.commandName, userLevel, requiredLevel);
+                
+                await interaction.reply({
+                    embeds: [errorEmbed],
+                    flags: MessageFlags.Ephemeral
+                });
+                return;
+            }
+        }
+
         await command.execute(interaction);
 
         // Record command usage to database

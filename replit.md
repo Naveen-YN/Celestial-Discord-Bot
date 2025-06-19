@@ -39,6 +39,9 @@ A comprehensive Discord bot similar to MEE6 and Dyno with advanced features incl
 - 2025-06-19: Added command usage tracking and analytics
 - 2025-06-19: Implemented embed template save/load functionality
 - 2025-06-19: Added visual command usage statistics
+- 2025-06-19: Implemented role-based command permissions system
+- 2025-06-19: Added automatic role hierarchy detection
+- 2025-06-19: Created permissions management command
 
 ## Technical Architecture
 - **Backend**: Node.js with Discord.js v14+ and Express

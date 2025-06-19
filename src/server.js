@@ -412,6 +412,29 @@ app.get('/api/command-stats', async (req, res) => {
     }
 });
 
+// Get role permissions information
+app.get('/api/role-permissions', (req, res) => {
+    try {
+        const { COMMAND_PERMISSIONS, ROLE_HIERARCHY, getRoleLevelName } = require('../src/utils/rolePermissions.js');
+        
+        const permissionInfo = {
+            hierarchy: ROLE_HIERARCHY,
+            commandPermissions: COMMAND_PERMISSIONS,
+            roleLevelNames: {}
+        };
+        
+        // Add role level names
+        Object.values(ROLE_HIERARCHY).forEach(level => {
+            permissionInfo.roleLevelNames[level] = getRoleLevelName(level);
+        });
+        
+        res.json({ success: true, data: permissionInfo });
+    } catch (error) {
+        console.error('Error getting role permissions:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
 // Server status endpoint
 app.get('/status', (req, res) => {
     res.json({

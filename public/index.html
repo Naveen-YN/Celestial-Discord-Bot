@@ -439,6 +439,10 @@
                                     <strong>/embed</strong>
                                     <span>Create custom embed messages</span>
                                 </div>
+                                <div class="command-item">
+                                    <strong>/permissions</strong>
+                                    <span>Manage role-based command permissions</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -448,6 +452,46 @@
             <div class="tab-content" id="settings" style="display: none;">
                 <div class="settings-container">
                     <h2>Bot Settings</h2>
+                    <div class="settings-section">
+                        <h3>Role Permissions</h3>
+                        <div class="permission-overview">
+                            <div class="permission-info">
+                                <p>Commands are automatically restricted based on user roles and permissions. The system uses a hierarchy where higher-level roles can access lower-level commands.</p>
+                            </div>
+                            <div class="role-hierarchy">
+                                <div class="role-level owner">
+                                    <span class="role-icon">👑</span>
+                                    <span class="role-name">Server Owner</span>
+                                    <span class="role-desc">Full access to all commands</span>
+                                </div>
+                                <div class="role-level admin">
+                                    <span class="role-icon">🛡️</span>
+                                    <span class="role-name">Administrator</span>
+                                    <span class="role-desc">announcement, refresh, lockdown + all below</span>
+                                </div>
+                                <div class="role-level moderator">
+                                    <span class="role-icon">⚖️</span>
+                                    <span class="role-name">Moderator</span>
+                                    <span class="role-desc">ban, kick, purge + all below</span>
+                                </div>
+                                <div class="role-level junior-mod">
+                                    <span class="role-icon">🔨</span>
+                                    <span class="role-name">Junior Mod</span>
+                                    <span class="role-desc">timeout, warn + all below</span>
+                                </div>
+                                <div class="role-level helper">
+                                    <span class="role-icon">⭐</span>
+                                    <span class="role-name">Helper</span>
+                                    <span class="role-desc">welcome, autorole, embed + all below</span>
+                                </div>
+                                <div class="role-level member">
+                                    <span class="role-icon">👤</span>
+                                    <span class="role-name">Member</span>
+                                    <span class="role-desc">Basic info commands</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="settings-section">
                         <h3>General Settings</h3>
                         <div class="setting-item">

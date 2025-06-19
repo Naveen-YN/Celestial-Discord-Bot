@@ -371,6 +371,76 @@ body {
     text-align: right;
 }
 
+/* Role Permissions */
+.permission-overview {
+    background: #252525;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+}
+
+.permission-info {
+    margin-bottom: 1.5rem;
+    color: #b3b3b3;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.role-hierarchy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.role-level {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: #1a1a1a;
+    border-radius: 0.5rem;
+    border-left: 4px solid #333;
+    align-items: center;
+}
+
+.role-level.owner {
+    border-left-color: #ffd700;
+}
+
+.role-level.admin {
+    border-left-color: #ff6b6b;
+}
+
+.role-level.moderator {
+    border-left-color: #5865f2;
+}
+
+.role-level.junior-mod {
+    border-left-color: #00aff4;
+}
+
+.role-level.helper {
+    border-left-color: #57f287;
+}
+
+.role-level.member {
+    border-left-color: #99aab5;
+}
+
+.role-icon {
+    font-size: 1.25rem;
+}
+
+.role-name {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.role-desc {
+    color: #b3b3b3;
+    font-size: 0.875rem;
+    text-align: right;
+}
+
 /* Stats Grid */
 .stats-grid {
     display: grid;

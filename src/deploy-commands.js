@@ -32,6 +32,20 @@ const rest = new REST().setToken(process.env.DISCORD_TOKEN);
         );
 
         console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+        
+        // Log commands with role restrictions
+        try {
+            const { COMMAND_PERMISSIONS, getRoleLevelName } = require('./utils/rolePermissions.js');
+            console.log('\nCommands with role restrictions:');
+            
+            Object.entries(COMMAND_PERMISSIONS).forEach(([command, level]) => {
+                if (level > 0) {
+                    console.log(`  /${command} - Requires: ${getRoleLevelName(level)}`);
+                }
+            });
+        } catch (error) {
+            console.error('Error loading role permissions:', error);
+        }
     } catch (error) {
         console.error(error);
     }

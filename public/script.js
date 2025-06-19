@@ -39,6 +39,8 @@ class BotDashboard {
                 // Load specific data for certain tabs
                 if (targetTab === 'commands') {
                     this.loadCommandUsageChart();
+                } else if (targetTab === 'settings') {
+                    this.loadRolePermissions();
                 }
             });
         });
@@ -615,6 +617,62 @@ class BotDashboard {
         .catch(error => {
             console.error('Error loading command usage chart:', error);
             document.getElementById('command-usage-chart').innerHTML = '<div class="loading-message">Error loading data</div>';
+        });
+    }
+
+    loadRolePermissions() {
+        fetch('/api/role-permissions')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.updateRolePermissionsDisplay(data.data);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading role permissions:', error);
+        });
+    }
+
+    updateRolePermissionsDisplay(permissionData) {
+        // Update the role hierarchy display with actual command counts
+        const commandsByLevel = {};
+        
+        // Group commands by required level
+        Object.entries(permissionData.commandPermissions).forEach(([command, level]) => {
+            if (!commandsByLevel[level]) {
+                commandsByLevel[level] = [];
+            }
+            commandsByLevel[level].push(command);
+        });
+
+        // Update role descriptions with actual command lists
+        const roleLevels = document.querySelectorAll('.role-level');
+        roleLevels.forEach(roleElement => {
+            const className = roleElement.className.split(' ')[1];
+            let level = null;
+            
+            switch (className) {
+                case 'owner': level = permissionData.hierarchy.OWNER; break;
+                case 'admin': level = permissionData.hierarchy.ADMIN; break;
+                case 'moderator': level = permissionData.hierarchy.MODERATOR; break;
+                case 'junior-mod': level = permissionData.hierarchy.JUNIOR_MOD; break;
+                case 'helper': level = permissionData.hierarchy.HELPER; break;
+                case 'member': level = permissionData.hierarchy.MEMBER; break;
+            }
+            
+            if (level !== null) {
+                const commands = commandsByLevel[level] || [];
+                const descElement = roleElement.querySelector('.role-desc');
+                
+                if (commands.length > 0) {
+                    const commandText = commands.map(cmd => `/${cmd}`).join(', ');
+                    descElement.textContent = commandText + (level > 0 ? ' + all below' : '');
+                } else if (level === permissionData.hierarchy.OWNER) {
+                    descElement.textContent = 'Full access to all commands';
+                } else {
+                    descElement.textContent = 'Basic info commands';
+                }
+            }
         });
     }
 
