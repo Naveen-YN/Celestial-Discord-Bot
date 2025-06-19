@@ -157,6 +157,12 @@ class BotDashboard {
 
     sendEmbed() {
         const embedData = this.getEmbedData();
+        const channelId = document.getElementById('targetChannel').value;
+        
+        if (!channelId) {
+            this.showNotification('Please select a channel to send the embed', 'warning');
+            return;
+        }
         
         // Send to bot API
         fetch('/api/send-embed', {
@@ -164,7 +170,7 @@ class BotDashboard {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(embedData)
+            body: JSON.stringify({ embedData, channelId })
         })
         .then(response => response.json())
         .then(data => {
@@ -298,15 +304,26 @@ class BotDashboard {
         fetch('/api/channels')
         .then(response => response.json())
         .then(data => {
-            const channelSelect = document.getElementById('welcomeChannel');
-            channelSelect.innerHTML = '<option value="">Select a channel...</option>';
+            const welcomeChannelSelect = document.getElementById('welcomeChannel');
+            const targetChannelSelect = document.getElementById('targetChannel');
+            
+            // Clear existing options
+            welcomeChannelSelect.innerHTML = '<option value="">Select a channel...</option>';
+            targetChannelSelect.innerHTML = '<option value="">Select a channel to send embed...</option>';
             
             if (data.channels) {
                 data.channels.forEach(channel => {
-                    const option = document.createElement('option');
-                    option.value = channel.id;
-                    option.textContent = `#${channel.name}`;
-                    channelSelect.appendChild(option);
+                    // Welcome channel option
+                    const welcomeOption = document.createElement('option');
+                    welcomeOption.value = channel.id;
+                    welcomeOption.textContent = `#${channel.name} (${channel.guild})`;
+                    welcomeChannelSelect.appendChild(welcomeOption);
+                    
+                    // Target channel option for embed
+                    const targetOption = document.createElement('option');
+                    targetOption.value = channel.id;
+                    targetOption.textContent = `#${channel.name} (${channel.guild})`;
+                    targetChannelSelect.appendChild(targetOption);
                 });
             }
         })
@@ -316,6 +333,7 @@ class BotDashboard {
     }
 
     loadBotStats() {
+        // Load bot stats
         fetch('/api/bot-stats')
         .then(response => response.json())
         .then(data => {
@@ -327,6 +345,59 @@ class BotDashboard {
         })
         .catch(error => {
             console.error('Error loading bot stats:', error);
+        });
+
+        // Load bot user info
+        fetch('/api/user-info')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('bot-name').textContent = data.user.username;
+                document.getElementById('bot-tag').textContent = data.user.tag;
+                document.getElementById('bot-avatar').src = data.user.avatar;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading bot user info:', error);
+        });
+
+        // Load servers
+        this.loadServers();
+    }
+
+    loadServers() {
+        fetch('/api/servers')
+        .then(response => response.json())
+        .then(data => {
+            const serversList = document.getElementById('servers-list');
+            
+            if (data.success && data.servers.length > 0) {
+                serversList.innerHTML = '';
+                data.servers.forEach(server => {
+                    const serverCard = document.createElement('div');
+                    serverCard.className = 'server-card';
+                    
+                    const iconContent = server.icon ? 
+                        `<img src="${server.icon}" alt="${server.name}">` :
+                        server.name.charAt(0).toUpperCase();
+                    
+                    serverCard.innerHTML = `
+                        <div class="server-icon">${iconContent}</div>
+                        <div class="server-info">
+                            <h3>${server.name}</h3>
+                            <p>${server.memberCount} members</p>
+                        </div>
+                    `;
+                    
+                    serversList.appendChild(serverCard);
+                });
+            } else {
+                serversList.innerHTML = '<div class="loading-message">No servers found</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading servers:', error);
+            document.getElementById('servers-list').innerHTML = '<div class="loading-message">Error loading servers</div>';
         });
     }
 

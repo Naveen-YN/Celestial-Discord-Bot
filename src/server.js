@@ -64,7 +64,8 @@ app.get('/api/channels', (req, res) => {
                     channels.push({
                         id: channel.id,
                         name: channel.name,
-                        guild: guild.name
+                        guild: guild.name,
+                        guildId: guild.id
                     });
                 });
         });
@@ -74,21 +75,100 @@ app.get('/api/channels', (req, res) => {
     }
 });
 
+app.get('/api/servers', (req, res) => {
+    const bot = global.botClient;
+    
+    if (bot && bot.isReady()) {
+        const servers = [];
+        bot.guilds.cache.forEach(guild => {
+            servers.push({
+                id: guild.id,
+                name: guild.name,
+                memberCount: guild.memberCount,
+                icon: guild.iconURL(),
+                owner: guild.ownerId,
+                createdAt: guild.createdTimestamp
+            });
+        });
+        res.json({ success: true, servers });
+    } else {
+        res.json({ success: false, error: 'Bot not ready' });
+    }
+});
+
+app.get('/api/user-info', (req, res) => {
+    const bot = global.botClient;
+    
+    if (bot && bot.isReady()) {
+        const botUser = bot.user;
+        res.json({
+            success: true,
+            user: {
+                id: botUser.id,
+                username: botUser.username,
+                discriminator: botUser.discriminator,
+                avatar: botUser.displayAvatarURL(),
+                tag: botUser.tag
+            }
+        });
+    } else {
+        res.json({ success: false, error: 'Bot not ready' });
+    }
+});
+
 app.post('/api/send-embed', (req, res) => {
     const bot = global.botClient;
-    const embedData = req.body;
+    const { embedData, channelId } = req.body;
     
     if (!bot || !bot.isReady()) {
         return res.json({ success: false, error: 'Bot not ready' });
     }
     
-    // This would typically send to a specific channel
-    // For now, we'll just validate the data
     if (!embedData.title && !embedData.description) {
         return res.json({ success: false, error: 'Embed must have a title or description' });
     }
     
-    res.json({ success: true, message: 'Embed data received' });
+    if (!channelId) {
+        return res.json({ success: false, error: 'Channel ID is required' });
+    }
+    
+    try {
+        const channel = bot.channels.cache.get(channelId);
+        if (!channel) {
+            return res.json({ success: false, error: 'Channel not found' });
+        }
+        
+        const { EmbedBuilder } = require('discord.js');
+        const embed = new EmbedBuilder();
+        
+        if (embedData.title) embed.setTitle(embedData.title);
+        if (embedData.description) embed.setDescription(embedData.description);
+        if (embedData.color) embed.setColor(embedData.color);
+        if (embedData.url) embed.setURL(embedData.url);
+        if (embedData.image) embed.setImage(embedData.image);
+        if (embedData.thumbnail) embed.setThumbnail(embedData.thumbnail);
+        if (embedData.footer && embedData.footer.text) {
+            embed.setFooter({
+                text: embedData.footer.text,
+                iconURL: embedData.footer.icon_url || null
+            });
+        }
+        if (embedData.fields && embedData.fields.length > 0) {
+            embedData.fields.forEach(field => {
+                embed.addFields({
+                    name: field.name,
+                    value: field.value,
+                    inline: field.inline || false
+                });
+            });
+        }
+        
+        channel.send({ embeds: [embed] });
+        res.json({ success: true, message: 'Embed sent successfully' });
+    } catch (error) {
+        console.error('Error sending embed:', error);
+        res.json({ success: false, error: error.message });
+    }
 });
 
 app.post('/api/welcome-config', (req, res) => {

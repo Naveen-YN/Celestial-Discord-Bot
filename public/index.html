@@ -59,6 +59,16 @@
 
             <!-- Tab Content -->
             <div class="tab-content" id="overview">
+                <div class="bot-info">
+                    <div class="bot-avatar">
+                        <img id="bot-avatar" src="" alt="Bot Avatar">
+                    </div>
+                    <div class="bot-details">
+                        <h2 id="bot-name">Loading...</h2>
+                        <p id="bot-tag">Loading...</p>
+                    </div>
+                </div>
+
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon">
@@ -95,6 +105,13 @@
                             <h3>Uptime</h3>
                             <p class="stat-number" id="uptime">Loading...</p>
                         </div>
+                    </div>
+                </div>
+
+                <div class="servers-section">
+                    <h2>Connected Servers</h2>
+                    <div id="servers-list" class="servers-grid">
+                        <div class="loading-message">Loading servers...</div>
                     </div>
                 </div>
 
@@ -173,6 +190,13 @@
                             <div class="form-group">
                                 <label for="embedFooterIcon">Footer Icon URL</label>
                                 <input type="url" id="embedFooterIcon" placeholder="https://example.com/icon.png">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="targetChannel">Target Channel</label>
+                                <select id="targetChannel">
+                                    <option value="">Select a channel to send embed...</option>
+                                </select>
                             </div>
                             
                             <div class="form-actions">

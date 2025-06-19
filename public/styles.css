@@ -133,6 +133,100 @@ body {
     overflow-y: auto;
 }
 
+/* Bot Info */
+.bot-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.bot-avatar img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px solid #5865f2;
+}
+
+.bot-details h2 {
+    color: #ffffff;
+    margin-bottom: 0.25rem;
+}
+
+.bot-details p {
+    color: #b3b3b3;
+    font-family: 'Courier New', monospace;
+}
+
+/* Servers Section */
+.servers-section {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.servers-section h2 {
+    margin-bottom: 1rem;
+    color: #ffffff;
+}
+
+.servers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.server-card {
+    background: #252525;
+    border: 1px solid #333;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.server-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #5865f2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.server-icon img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+.server-info h3 {
+    color: #ffffff;
+    margin-bottom: 0.25rem;
+    font-size: 1rem;
+}
+
+.server-info p {
+    color: #b3b3b3;
+    font-size: 0.875rem;
+}
+
+.loading-message {
+    text-align: center;
+    color: #b3b3b3;
+    padding: 2rem;
+}
+
 /* Stats Grid */
 .stats-grid {
     display: grid;
