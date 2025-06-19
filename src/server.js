@@ -6,7 +6,8 @@ const port = 5000;
 
 // Middleware
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../public')));
+// Serve static files from 'public' at /discord-bot
+app.use('/discord-bot', express.static(path.join(__dirname, '../public')));
 
 // Middleware for basic request logging
 app.use((req, res, next) => {
@@ -20,19 +21,17 @@ app.use((err, req, res, next) => {
     res.status(500).send('Something broke!');
 });
 
-// Serve dashboard
+// Optional: Redirect root to /discord-bot
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/index.html'));
+    res.redirect('/discord-bot');
 });
 
-// API Routes
+// API Routes (accessible at /discord-bot/api/... if prefixed)
 app.get('/api/bot-stats', async (req, res) => {
     try {
-        // Get bot instance if available
         const bot = global.botClient;
         
         if (bot && bot.isReady()) {
-            // Get additional stats from database
             const dbStats = await storage.getDashboardStats();
             
             const stats = {
@@ -74,7 +73,7 @@ app.get('/api/channels', (req, res) => {
         const channels = [];
         bot.guilds.cache.forEach(guild => {
             guild.channels.cache
-                .filter(channel => channel.type === 0) // Text channels
+                .filter(channel => channel.type === 0)
                 .forEach(channel => {
                     channels.push({
                         id: channel.id,
@@ -97,7 +96,6 @@ app.get('/api/servers', async (req, res) => {
         if (bot && bot.isReady()) {
             const servers = [];
             for (const [guildId, guild] of bot.guilds.cache) {
-                // Sync guild to database and get additional stats
                 await storage.upsertGuild({
                     id: guild.id,
                     name: guild.name,
@@ -166,11 +164,6 @@ app.post('/api/send-embed', (req, res) => {
     }
     
     try {
-        const channel = bot.channels.cache.get(channelId);
-        if (!channel) {
-            return res.json({ success: false, error: 'Channel not found' });
-        }
-        
         const { EmbedBuilder } = require('discord.js');
         const embed = new EmbedBuilder();
         
@@ -196,7 +189,7 @@ app.post('/api/send-embed', (req, res) => {
             });
         }
         
-        channel.send({ embeds: [embed] });
+        bot.channels.cache.get(channelId)?.send({ embeds: [embed] });
         res.json({ success: true, message: 'Embed sent successfully' });
     } catch (error) {
         console.error('Error sending embed:', error);
@@ -208,7 +201,6 @@ app.post('/api/welcome-config', async (req, res) => {
     const configData = req.body;
     
     try {
-        // Ensure guild exists in database
         const bot = global.botClient;
         if (bot && bot.isReady()) {
             let guild = null;
@@ -232,16 +224,14 @@ app.post('/api/welcome-config', async (req, res) => {
             }
         }
 
-        // Get guild ID from channel
         let guildId = configData.guildId;
         if (!guildId && configData.channel) {
-            const channel = bot.channels.cache.get(configData.channel);
+            const channel = bot?.channels.cache.get(configData.channel);
             if (channel) {
                 guildId = channel.guild.id;
             }
         }
 
-        // Save welcome configuration
         await storage.upsertWelcomeConfig({
             guildId: guildId,
             channelId: configData.channel,
@@ -267,9 +257,7 @@ app.post('/api/test-welcome', (req, res) => {
         return res.json({ success: false, error: 'Bot not ready' });
     }
     
-    // This would send a test welcome message
     console.log('Test welcome message requested');
-    
     res.json({ success: true, message: 'Test welcome message sent' });
 });
 
@@ -282,14 +270,12 @@ app.post('/api/settings', async (req, res) => {
     }
     
     try {
-        // Save settings to database
         await storage.upsertBotSettings({
             status: settingsData.status,
             activityType: settingsData.activityType,
             activityText: settingsData.activityText
         });
 
-        // Update bot presence
         const activityTypes = {
             playing: 0,
             streaming: 1,
@@ -326,14 +312,12 @@ app.post('/api/reset-settings', async (req, res) => {
     }
     
     try {
-        // Reset settings in database
         await storage.upsertBotSettings({
             status: 'online',
             activityType: 'playing',
             activityText: 'Discord Bot Dashboard'
         });
 
-        // Reset to default presence
         bot.user.setPresence({
             status: 'online',
             activities: [{
@@ -350,8 +334,6 @@ app.post('/api/reset-settings', async (req, res) => {
 });
 
 // New API endpoints for database functionality
-
-// Get welcome configuration for a guild
 app.get('/api/welcome-config/:guildId', async (req, res) => {
     try {
         const { guildId } = req.params;
@@ -363,7 +345,6 @@ app.get('/api/welcome-config/:guildId', async (req, res) => {
     }
 });
 
-// Get embed templates
 app.get('/api/embed-templates', async (req, res) => {
     try {
         const { guildId } = req.query;
@@ -375,7 +356,6 @@ app.get('/api/embed-templates', async (req, res) => {
     }
 });
 
-// Save embed template
 app.post('/api/embed-templates', async (req, res) => {
     try {
         const templateData = req.body;
@@ -387,7 +367,6 @@ app.post('/api/embed-templates', async (req, res) => {
     }
 });
 
-// Get moderation logs for a guild
 app.get('/api/moderation-logs/:guildId', async (req, res) => {
     try {
         const { guildId } = req.params;
@@ -400,7 +379,6 @@ app.get('/api/moderation-logs/:guildId', async (req, res) => {
     }
 });
 
-// Get command statistics
 app.get('/api/command-stats', async (req, res) => {
     try {
         const { guildId } = req.query;
@@ -412,7 +390,6 @@ app.get('/api/command-stats', async (req, res) => {
     }
 });
 
-// Get role permissions information
 app.get('/api/role-permissions', (req, res) => {
     try {
         const { COMMAND_PERMISSIONS, ROLE_HIERARCHY, getRoleLevelName } = require('../src/utils/rolePermissions.js');
@@ -423,7 +400,6 @@ app.get('/api/role-permissions', (req, res) => {
             roleLevelNames: {}
         };
         
-        // Add role level names
         Object.values(ROLE_HIERARCHY).forEach(level => {
             permissionInfo.roleLevelNames[level] = getRoleLevelName(level);
         });
@@ -435,7 +411,6 @@ app.get('/api/role-permissions', (req, res) => {
     }
 });
 
-// Custom Commands API
 app.get('/api/custom-commands', async (req, res) => {
     try {
         const { guildId } = req.query;
@@ -481,7 +456,6 @@ app.delete('/api/custom-commands/:id', async (req, res) => {
     }
 });
 
-// Bot Messages API
 app.get('/api/bot-messages', async (req, res) => {
     try {
         const { guildId, limit } = req.query;
@@ -498,10 +472,8 @@ app.put('/api/bot-messages/:messageId', async (req, res) => {
         const { messageId } = req.params;
         const updates = req.body;
         
-        // Update in database
         const message = await storage.updateBotMessage(messageId, updates);
         
-        // Update Discord message if bot is available
         if (global.discordClient) {
             const channel = await global.discordClient.channels.fetch(message.channelId);
             if (channel) {
@@ -526,10 +498,8 @@ app.delete('/api/bot-messages/:messageId', async (req, res) => {
     try {
         const { messageId } = req.params;
         
-        // Delete from database
         await storage.deleteBotMessage(messageId);
         
-        // Delete Discord message if bot is available
         if (global.discordClient) {
             const message = await storage.getBotMessage(messageId);
             if (message) {
@@ -550,7 +520,6 @@ app.delete('/api/bot-messages/:messageId', async (req, res) => {
     }
 });
 
-// Server Logs API
 app.get('/api/server-logs', async (req, res) => {
     try {
         const { type, date, guildId } = req.query;
@@ -574,7 +543,6 @@ app.delete('/api/server-logs', async (req, res) => {
     }
 });
 
-// Server status endpoint
 app.get('/status', (req, res) => {
     res.json({
         status: 'online',
@@ -586,12 +554,10 @@ app.get('/status', (req, res) => {
     });
 });
 
-// Create server instance
 const server = app.listen(port, '0.0.0.0', () => {
     console.log(`Express server is running on port ${port}`);
 });
 
-// Handle graceful shutdown
 process.on('SIGTERM', () => {
     console.log('SIGTERM received. Shutting down gracefully...');
     server.close(() => {
