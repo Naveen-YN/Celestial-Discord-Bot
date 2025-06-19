@@ -45,6 +45,8 @@ class BotDashboard {
                     this.loadCustomCommands();
                 } else if (targetTab === 'messages') {
                     this.loadBotMessages();
+                } else if (targetTab === 'logs') {
+                    this.loadServerLogs();
                 }
             });
         });
@@ -1020,6 +1022,130 @@ class BotDashboard {
 
     refreshMessages() {
         this.loadBotMessages();
+    }
+
+    // Server Logs Management
+    loadServerLogs() {
+        const logType = document.getElementById('log-type-filter')?.value || 'all';
+        const logDate = document.getElementById('log-date-filter')?.value;
+        
+        let url = '/api/server-logs?';
+        if (logType !== 'all') url += `type=${logType}&`;
+        if (logDate) url += `date=${logDate}&`;
+        
+        fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.displayServerLogs(data.logs);
+                this.updateLogsStats(data.stats);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading server logs:', error);
+            document.getElementById('logs-list').innerHTML = '<div class="error-message">Error loading logs</div>';
+        });
+    }
+
+    displayServerLogs(logs) {
+        const container = document.getElementById('logs-list');
+        
+        if (!logs || logs.length === 0) {
+            container.innerHTML = '<div class="empty-state">No logs found for the selected filters.</div>';
+            return;
+        }
+
+        container.innerHTML = logs.map(log => {
+            const logIcon = this.getLogIcon(log.type);
+            const logColor = this.getLogColor(log.type);
+            
+            return `
+                <div class="log-entry" style="border-left-color: ${logColor}">
+                    <div class="log-header">
+                        <div class="log-info">
+                            <span class="log-icon">${logIcon}</span>
+                            <span class="log-type">${log.type.replace('_', ' ').toUpperCase()}</span>
+                            <span class="log-timestamp">${new Date(log.timestamp).toLocaleString()}</span>
+                        </div>
+                        <div class="log-user">
+                            ${log.moderator ? `by ${log.moderator}` : ''}
+                        </div>
+                    </div>
+                    <div class="log-content">
+                        <div class="log-action">${log.action}</div>
+                        ${log.target ? `<div class="log-target">Target: ${log.target}</div>` : ''}
+                        ${log.reason ? `<div class="log-reason">Reason: ${log.reason}</div>` : ''}
+                        ${log.details ? `<div class="log-details">${log.details}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    updateLogsStats(stats) {
+        if (stats) {
+            document.getElementById('total-logs').textContent = stats.totalLogs || 0;
+            document.getElementById('moderation-actions').textContent = stats.moderationActions || 0;
+            document.getElementById('active-warnings').textContent = stats.activeWarnings || 0;
+            document.getElementById('commands-today').textContent = stats.commandsToday || 0;
+        }
+    }
+
+    getLogIcon(type) {
+        const icons = {
+            'moderation': '🛡️',
+            'commands': '⚡',
+            'warnings': '⚠️',
+            'role_changes': '👥',
+            'ban': '🔨',
+            'kick': '👢',
+            'timeout': '⏰',
+            'warn': '⚠️',
+            'role_add': '➕',
+            'role_remove': '➖'
+        };
+        return icons[type] || '📝';
+    }
+
+    getLogColor(type) {
+        const colors = {
+            'moderation': '#ff6b6b',
+            'commands': '#5865f2',
+            'warnings': '#ffd93d',
+            'role_changes': '#57f287',
+            'ban': '#dc3545',
+            'kick': '#fd7e14',
+            'timeout': '#6c757d',
+            'warn': '#ffc107',
+            'role_add': '#28a745',
+            'role_remove': '#dc3545'
+        };
+        return colors[type] || '#6c757d';
+    }
+
+    refreshLogs() {
+        this.loadServerLogs();
+    }
+
+    async clearLogs() {
+        if (!confirm('Are you sure you want to clear all server logs? This action cannot be undone.')) return;
+
+        try {
+            const response = await fetch('/api/server-logs', {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification('Server logs cleared successfully!', 'success');
+                this.loadServerLogs();
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            this.showNotification(`Error: ${error.message}`, 'error');
+        }
     }
 
     formatUptime(seconds) {

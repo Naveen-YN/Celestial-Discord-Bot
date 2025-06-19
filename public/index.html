@@ -462,13 +462,26 @@
             </div>
 
             <div class="tab-content" id="custom-commands" style="display: none;">
-                <div class="commands-container">
+                <div class="custom-commands-section">
                     <div class="section-header">
-                        <h2>Custom Commands</h2>
+                        <h2>Custom Slash Commands</h2>
                         <button class="btn btn-primary" onclick="dashboard.showCreateCommandModal()">
-                            <span class="btn-icon">➕</span>
+                            <i class="fas fa-plus"></i>
                             Create Command
                         </button>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-content">
+                            <h3>Create Custom Slash Commands</h3>
+                            <p>Build your own slash commands with custom responses, embed support, and role-based permissions. Commands work exactly like built-in Discord commands.</p>
+                            <ul>
+                                <li>Text or embed responses</li>
+                                <li>Role-based permission system</li>
+                                <li>Usage statistics tracking</li>
+                                <li>Easy enable/disable toggle</li>
+                            </ul>
+                        </div>
                     </div>
 
                     <div class="custom-commands-list" id="custom-commands-list">
@@ -489,7 +502,7 @@
                                 <option value="custom_command">Custom Commands</option>
                             </select>
                             <button class="btn btn-secondary" onclick="dashboard.refreshMessages()">
-                                <span class="btn-icon">🔄</span>
+                                <i class="fas fa-sync-alt"></i>
                                 Refresh
                             </button>
                         </div>
@@ -497,6 +510,55 @@
 
                     <div class="messages-list" id="messages-list">
                         <div class="loading-message">Loading bot messages...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="logs" style="display: none;">
+                <div class="logs-container">
+                    <div class="section-header">
+                        <h2>Server Logs</h2>
+                        <div class="logs-filters">
+                            <select id="log-type-filter">
+                                <option value="all">All Logs</option>
+                                <option value="moderation">Moderation Actions</option>
+                                <option value="commands">Command Usage</option>
+                                <option value="warnings">User Warnings</option>
+                                <option value="role_changes">Role Changes</option>
+                            </select>
+                            <input type="date" id="log-date-filter" placeholder="Filter by date">
+                            <button class="btn btn-secondary" onclick="dashboard.refreshLogs()">
+                                <i class="fas fa-sync-alt"></i>
+                                Refresh
+                            </button>
+                            <button class="btn btn-danger" onclick="dashboard.clearLogs()">
+                                <i class="fas fa-trash"></i>
+                                Clear Logs
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="logs-stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-logs">0</div>
+                            <div class="stat-label">Total Logs</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="moderation-actions">0</div>
+                            <div class="stat-label">Moderation Actions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="active-warnings">0</div>
+                            <div class="stat-label">Active Warnings</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="commands-today">0</div>
+                            <div class="stat-label">Commands Today</div>
+                        </div>
+                    </div>
+
+                    <div class="logs-list" id="logs-list">
+                        <div class="loading-message">Loading server logs...</div>
                     </div>
                 </div>
             </div>

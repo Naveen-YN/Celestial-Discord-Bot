@@ -550,6 +550,30 @@ app.delete('/api/bot-messages/:messageId', async (req, res) => {
     }
 });
 
+// Server Logs API
+app.get('/api/server-logs', async (req, res) => {
+    try {
+        const { type, date, guildId } = req.query;
+        const logs = await storage.getServerLogs(guildId, type, date);
+        const stats = await storage.getLogsStats(guildId);
+        res.json({ success: true, logs, stats });
+    } catch (error) {
+        console.error('Error getting server logs:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
+app.delete('/api/server-logs', async (req, res) => {
+    try {
+        const { guildId } = req.query;
+        await storage.clearServerLogs(guildId);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error clearing server logs:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
 // Server status endpoint
 app.get('/status', (req, res) => {
     res.json({
