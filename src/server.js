@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const { storage } = require('../server/storage.js');
 const app = express();
 const port = 5000;
 
@@ -25,30 +26,44 @@ app.get('/', (req, res) => {
 });
 
 // API Routes
-app.get('/api/bot-stats', (req, res) => {
-    // Get bot instance if available
-    const bot = global.botClient;
-    
-    if (bot && bot.isReady()) {
-        const stats = {
-            servers: bot.guilds.cache.size,
-            users: bot.users.cache.size,
-            uptime: Math.floor(bot.uptime / 1000),
-            commands: 19,
-            status: 'online'
-        };
-        res.json({ success: true, stats });
-    } else {
-        res.json({ 
-            success: true, 
-            stats: { 
-                servers: 0, 
-                users: 0, 
-                uptime: 0, 
+app.get('/api/bot-stats', async (req, res) => {
+    try {
+        // Get bot instance if available
+        const bot = global.botClient;
+        
+        if (bot && bot.isReady()) {
+            // Get additional stats from database
+            const dbStats = await storage.getDashboardStats();
+            
+            const stats = {
+                servers: bot.guilds.cache.size,
+                users: bot.users.cache.size,
+                uptime: Math.floor(bot.uptime / 1000),
                 commands: 19,
-                status: 'offline' 
-            } 
-        });
+                status: 'online',
+                totalGuilds: dbStats.totalGuilds || 0,
+                totalModerationActions: dbStats.totalModerationActions || 0,
+                totalActiveWarnings: dbStats.totalActiveWarnings || 0
+            };
+            res.json({ success: true, stats });
+        } else {
+            res.json({ 
+                success: true, 
+                stats: { 
+                    servers: 0, 
+                    users: 0, 
+                    uptime: 0, 
+                    commands: 19,
+                    status: 'offline',
+                    totalGuilds: 0,
+                    totalModerationActions: 0,
+                    totalActiveWarnings: 0
+                } 
+            });
+        }
+    } catch (error) {
+        console.error('Error getting bot stats:', error);
+        res.json({ success: false, error: error.message });
     }
 });
 
@@ -75,24 +90,42 @@ app.get('/api/channels', (req, res) => {
     }
 });
 
-app.get('/api/servers', (req, res) => {
-    const bot = global.botClient;
-    
-    if (bot && bot.isReady()) {
-        const servers = [];
-        bot.guilds.cache.forEach(guild => {
-            servers.push({
-                id: guild.id,
-                name: guild.name,
-                memberCount: guild.memberCount,
-                icon: guild.iconURL(),
-                owner: guild.ownerId,
-                createdAt: guild.createdTimestamp
-            });
-        });
-        res.json({ success: true, servers });
-    } else {
-        res.json({ success: false, error: 'Bot not ready' });
+app.get('/api/servers', async (req, res) => {
+    try {
+        const bot = global.botClient;
+        
+        if (bot && bot.isReady()) {
+            const servers = [];
+            for (const [guildId, guild] of bot.guilds.cache) {
+                // Sync guild to database and get additional stats
+                await storage.upsertGuild({
+                    id: guild.id,
+                    name: guild.name,
+                    iconUrl: guild.iconURL(),
+                    ownerId: guild.ownerId,
+                    memberCount: guild.memberCount
+                });
+                
+                const guildStats = await storage.getDashboardStats(guild.id);
+                
+                servers.push({
+                    id: guild.id,
+                    name: guild.name,
+                    memberCount: guild.memberCount,
+                    icon: guild.iconURL(),
+                    owner: guild.ownerId,
+                    createdAt: guild.createdTimestamp,
+                    moderationActions: guildStats.moderationActions || 0,
+                    activeWarnings: guildStats.activeWarnings || 0
+                });
+            }
+            res.json({ success: true, servers });
+        } else {
+            res.json({ success: false, error: 'Bot not ready' });
+        }
+    } catch (error) {
+        console.error('Error getting servers:', error);
+        res.json({ success: false, error: error.message });
     }
 });
 
@@ -171,13 +204,60 @@ app.post('/api/send-embed', (req, res) => {
     }
 });
 
-app.post('/api/welcome-config', (req, res) => {
+app.post('/api/welcome-config', async (req, res) => {
     const configData = req.body;
     
-    // Store configuration (in a real implementation, this would go to a database)
-    console.log('Welcome config saved:', configData);
-    
-    res.json({ success: true, message: 'Welcome configuration saved' });
+    try {
+        // Ensure guild exists in database
+        const bot = global.botClient;
+        if (bot && bot.isReady()) {
+            let guild = null;
+            if (configData.guildId) {
+                guild = bot.guilds.cache.get(configData.guildId);
+            } else if (configData.channel) {
+                const channel = bot.channels.cache.get(configData.channel);
+                if (channel) {
+                    guild = channel.guild;
+                }
+            }
+            
+            if (guild) {
+                await storage.upsertGuild({
+                    id: guild.id,
+                    name: guild.name,
+                    iconUrl: guild.iconURL(),
+                    ownerId: guild.ownerId,
+                    memberCount: guild.memberCount
+                });
+            }
+        }
+
+        // Get guild ID from channel
+        let guildId = configData.guildId;
+        if (!guildId && configData.channel) {
+            const channel = bot.channels.cache.get(configData.channel);
+            if (channel) {
+                guildId = channel.guild.id;
+            }
+        }
+
+        // Save welcome configuration
+        await storage.upsertWelcomeConfig({
+            guildId: guildId,
+            channelId: configData.channel,
+            style: configData.style,
+            message: configData.message,
+            color: configData.color,
+            imageUrl: configData.image,
+            thumbnailUrl: configData.thumbnail,
+            footerText: configData.footer
+        });
+        
+        res.json({ success: true, message: 'Welcome configuration saved to database' });
+    } catch (error) {
+        console.error('Error saving welcome config:', error);
+        res.json({ success: false, error: error.message });
+    }
 });
 
 app.post('/api/test-welcome', (req, res) => {
@@ -193,7 +273,7 @@ app.post('/api/test-welcome', (req, res) => {
     res.json({ success: true, message: 'Test welcome message sent' });
 });
 
-app.post('/api/settings', (req, res) => {
+app.post('/api/settings', async (req, res) => {
     const bot = global.botClient;
     const settingsData = req.body;
     
@@ -202,6 +282,13 @@ app.post('/api/settings', (req, res) => {
     }
     
     try {
+        // Save settings to database
+        await storage.upsertBotSettings({
+            status: settingsData.status,
+            activityType: settingsData.activityType,
+            activityText: settingsData.activityText
+        });
+
         // Update bot presence
         const activityTypes = {
             playing: 0,
@@ -224,14 +311,14 @@ app.post('/api/settings', (req, res) => {
         
         bot.user.setPresence(presence);
         
-        res.json({ success: true, message: 'Settings updated successfully' });
+        res.json({ success: true, message: 'Settings updated and saved to database' });
     } catch (error) {
         console.error('Error updating settings:', error);
         res.json({ success: false, error: error.message });
     }
 });
 
-app.post('/api/reset-settings', (req, res) => {
+app.post('/api/reset-settings', async (req, res) => {
     const bot = global.botClient;
     
     if (!bot || !bot.isReady()) {
@@ -239,6 +326,13 @@ app.post('/api/reset-settings', (req, res) => {
     }
     
     try {
+        // Reset settings in database
+        await storage.upsertBotSettings({
+            status: 'online',
+            activityType: 'playing',
+            activityText: 'Discord Bot Dashboard'
+        });
+
         // Reset to default presence
         bot.user.setPresence({
             status: 'online',
@@ -248,9 +342,72 @@ app.post('/api/reset-settings', (req, res) => {
             }]
         });
         
-        res.json({ success: true, message: 'Settings reset successfully' });
+        res.json({ success: true, message: 'Settings reset and saved to database' });
     } catch (error) {
         console.error('Error resetting settings:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
+// New API endpoints for database functionality
+
+// Get welcome configuration for a guild
+app.get('/api/welcome-config/:guildId', async (req, res) => {
+    try {
+        const { guildId } = req.params;
+        const config = await storage.getWelcomeConfig(guildId);
+        res.json({ success: true, config });
+    } catch (error) {
+        console.error('Error getting welcome config:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
+// Get embed templates
+app.get('/api/embed-templates', async (req, res) => {
+    try {
+        const { guildId } = req.query;
+        const templates = await storage.getEmbedTemplates(guildId);
+        res.json({ success: true, templates });
+    } catch (error) {
+        console.error('Error getting embed templates:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
+// Save embed template
+app.post('/api/embed-templates', async (req, res) => {
+    try {
+        const templateData = req.body;
+        const template = await storage.saveEmbedTemplate(templateData);
+        res.json({ success: true, template });
+    } catch (error) {
+        console.error('Error saving embed template:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
+// Get moderation logs for a guild
+app.get('/api/moderation-logs/:guildId', async (req, res) => {
+    try {
+        const { guildId } = req.params;
+        const { limit = 50 } = req.query;
+        const logs = await storage.getModerationLogs(guildId, parseInt(limit));
+        res.json({ success: true, logs });
+    } catch (error) {
+        console.error('Error getting moderation logs:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
+// Get command statistics
+app.get('/api/command-stats', async (req, res) => {
+    try {
+        const { guildId } = req.query;
+        const stats = await storage.getCommandStats(guildId);
+        res.json({ success: true, stats });
+    } catch (error) {
+        console.error('Error getting command stats:', error);
         res.json({ success: false, error: error.message });
     }
 });

@@ -97,11 +97,31 @@ process.on('unhandledRejection', (error) => {
     console.error('Unhandled Rejection:', error);
 });
 
-client.once(Events.ClientReady, c => {
-    console.log(`Ready! Logged in as ${c.user.tag}`);
-});
+
 
 // Make bot client globally available for dashboard
 global.botClient = client;
+
+// Initialize database with guilds when bot is ready
+client.once(Events.ClientReady, async c => {
+    console.log(`Ready! Logged in as ${c.user.tag}`);
+    
+    // Sync all guilds to database
+    try {
+        const { storage } = require('../server/storage.js');
+        for (const [guildId, guild] of c.guilds.cache) {
+            await storage.upsertGuild({
+                id: guild.id,
+                name: guild.name,
+                iconUrl: guild.iconURL(),
+                ownerId: guild.ownerId,
+                memberCount: guild.memberCount
+            });
+        }
+        console.log(`Synced ${c.guilds.cache.size} guilds to database`);
+    } catch (error) {
+        console.error('Error syncing guilds to database:', error);
+    }
+});
 
 client.login(process.env.DISCORD_TOKEN);
