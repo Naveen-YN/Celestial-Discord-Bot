@@ -46,11 +46,11 @@ module.exports = {
                 // Send to user via DM
                 if (!user.send) throw new Error('Invalid user object');
                 await user.send(message);
-                // Send notification about sender and origin
+                // Send notification about sender and origin with blockquote formatting
                 const origin = interaction.guild
                     ? `from ${interaction.guild.name} by ${interaction.user.tag}`
                     : `privately by ${interaction.user.tag} via bot DM`;
-                await user.send(`📬 This message was sent ${origin}.`);
+                await user.send(`> 📬 *This message was sent ${origin}.*`);
                 await interaction.editReply({
                     content: `Message successfully sent to ${user.tag}!`
                 });
