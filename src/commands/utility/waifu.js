@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch-commonjs');
 
 // Valid SFW tags from waifu.im
 const validTags = [
@@ -50,7 +50,7 @@ module.exports = {
             // Extract character name from tags
             let characterName = 'Unknown Waifu';
             const tags = image.tags.map(t => t.name);
-            // Prioritize character-specific tags (e.g., 'raiden-shogun', 'marin-kitagawa')
+            // Prioritize character-specific tags
             const characterTags = tags.filter(t => validTags.includes(t) && !['waifu', 'maid', 'oppai', 'selfies', 'uniform'].includes(t));
             if (characterTags.length > 0) {
                 // Convert tag to readable name (e.g., 'raiden-shogun' → 'Raiden Shogun')
