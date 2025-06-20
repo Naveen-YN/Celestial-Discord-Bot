@@ -62,7 +62,6 @@ module.exports = {
             // Create embed
             const embed = new EmbedBuilder()
                 .setTitle('Your Waifu! 💖')
-                .setDescription(`Meet **${characterName}**, your new waifu!`)
                 .setImage(imageUrl)
                 .setColor('#ff69b4') // Pink for anime aesthetic
                 .addFields(
