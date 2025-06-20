@@ -28,6 +28,9 @@ module.exports = {
             });
         }
 
+        // Defer the reply to avoid interaction timeout
+        await interaction.deferReply({ ephemeral: true });
+
         const message = interaction.options.getString('message');
         const channel = interaction.options.getChannel('channel') ?? interaction.channel;
         const user = interaction.options.getUser('user');
@@ -37,25 +40,22 @@ module.exports = {
             if (user) {
                 // Send to user via DM
                 await user.send(message);
-                await interaction.reply({
-                    content: `Message successfully sent to ${user.tag}!`,
-                    ephemeral: true
+                await interaction.editReply({
+                    content: `Message successfully sent to ${user.tag}!`
                 });
             } else {
                 // Send to channel
                 await channel.send({
                     content: mention ? `@everyone ${message}` : message
                 });
-                await interaction.reply({
-                    content: `Message successfully sent to ${channel}!`,
-                    ephemeral: true
+                await interaction.editReply({
+                    content: `Message successfully sent to ${channel}!`
                 });
             }
         } catch (error) {
             console.error(error);
-            await interaction.reply({
-                content: 'There was an error sending the message!',
-                ephemeral: true
+            await interaction.editReply({
+                content: 'There was an error sending the message!'
             });
         }
     },
