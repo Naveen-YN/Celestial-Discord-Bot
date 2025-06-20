@@ -60,10 +60,11 @@ module.exports = {
             }
 
             // Create embed
+            const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
             const embed = new EmbedBuilder()
                 .setTitle('Your Waifu! 💖')
                 .setImage(imageUrl)
-                .setColor('#ff69b4') // Pink for anime aesthetic
+                .setColor(randomColor)
                 .addFields(
                     { name: 'Tags', value: tags.join(', ') || 'None', inline: true },
                     { name: 'Source', value: image.source ? `[Link](${image.source})` : 'Unknown', inline: true }
