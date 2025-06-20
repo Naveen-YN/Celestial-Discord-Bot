@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, InteractionResponseFlags } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -24,12 +24,12 @@ module.exports = {
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator) && interaction.guild.ownerId !== interaction.user.id) {
             return await interaction.reply({
                 content: 'You must be the server owner or an administrator to use this command!',
-                ephemeral: true
+                flags: InteractionResponseFlags.Ephemeral
             });
         }
 
         // Defer the reply to avoid interaction timeout
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: InteractionResponseFlags.Ephemeral });
 
         const message = interaction.options.getString('message');
         const channel = interaction.options.getChannel('channel') ?? interaction.channel;
