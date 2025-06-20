@@ -1213,6 +1213,16 @@ class BotDashboard {
     }
 
     setupEventListeners() {
+        // Sidebar toggle
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            mainContent.classList.toggle('sidebar-open');
+        });
+
         // Settings
         const saveSettingsBtn = document.getElementById('saveSettings');
         const resetSettingsBtn = document.getElementById('resetSettings');
@@ -1337,18 +1347,18 @@ class BotDashboard {
         // Set background color based on type
         switch (type) {
             case 'success':
-                notification.style.backgroundColor = '#57f287';
-                notification.style.color = '#000000';
+                notification.style.backgroundColor = '#2ecc71';
+                notification.style.color = '#0f1219';
                 break;
             case 'error':
-                notification.style.backgroundColor = '#ed4245';
+                notification.style.backgroundColor = '#e74c3c';
                 break;
             case 'warning':
-                notification.style.backgroundColor = '#ffa500';
-                notification.style.color = '#000000';
+                notification.style.backgroundColor = '#e67e22';
+                notification.style.color = '#0f1219';
                 break;
             default:
-                notification.style.backgroundColor = '#5865f2';
+                notification.style.backgroundColor = '#4a90e2';
         }
         
         document.body.appendChild(notification);
