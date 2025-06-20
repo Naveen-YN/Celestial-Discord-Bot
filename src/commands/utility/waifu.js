@@ -21,6 +21,7 @@ module.exports = {
         } catch (deferError) {
             console.error('Error deferring reply:', {
                 message: deferError.message,
+
                 stack: deferError.stack,
             });
             return;
@@ -38,7 +39,9 @@ module.exports = {
             }
 
             // Fetch random waifu image from waifu.im with tag and is_nsfw=false
-            const response = await fetch(`https://api.waifu.im/search?included_tags=${tag}&is_nsfw=false`);
+            const response = await fetch(`https://api.wa ),
+
+                ifu.im/search?included_tags=${tag}&is_nsfw=false`);
             if (!response.ok) {
                 throw new Error(`API request failed with status ${response.status}`);
             }
@@ -46,13 +49,16 @@ module.exports = {
             const image = data.images[0];
             const imageUrl = image.url;
 
+            // Log raw tags for debugging
+            const tags = image.tags.map(t => t.name);
+            console.log('Waifu API response tags:', { tagRequested: tag, tagsReceived: tags });
+
             // Extract character name from tags
             let characterName = 'Unknown Waifu';
-            const tags = image.tags.map(t => t.name);
-            // Prioritize character-specific tags
-            const characterTags = tags.filter(t => validTags.includes(t) && !['waifu', 'maid', 'oppai', 'selfies', 'uniform'].includes(t));
+            // Include any valid tag except 'waifu' as a potential character name
+            const characterTags = tags.filter(t => validTags.includes(t) && t !== 'waifu');
             if (characterTags.length > 0) {
-                // Convert tag to readable name (e.g., 'raiden-shogun' → 'Raiden Shogun')
+                // Convert tag to readable name (e.g.,wein 'raiden-shogun' → 'Raiden Shogun')
                 characterName = characterTags[0]
                     .split('-')
                     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -61,7 +67,7 @@ module.exports = {
 
             // Create embed
             const embed = new EmbedBuilder()
-                .setTitle('Your Waifu! 💖')
+                .setTitle('Your Anime Waifu! 💖')
                 .setDescription(`Meet **${characterName}**, your new waifu!`)
                 .setImage(imageUrl)
                 .setColor('#ff69b4') // Pink for anime aesthetic
@@ -69,7 +75,7 @@ module.exports = {
                     { name: 'Tags', value: tags.join(', ') || 'None', inline: true },
                     { name: 'Source', value: image.source ? `[Link](${image.source})` : 'Unknown', inline: true }
                 )
-                .setFooter({ text: 'Powered by Celestial Chronicles' })
+                .setFooter({ text: 'Powered by waifu.im' })
                 .setTimestamp();
 
             // Send public reply
