@@ -21,7 +21,7 @@ module.exports = {
 
     async execute(interaction) {
         // Check if user is the server owner or has Administrator permissions
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator) && interaction.guild.ownerId !== interaction.user.id) {
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator) && interaction.guild?.ownerId !== interaction.user.id) {
             return await interaction.reply({
                 content: 'You must be the server owner or an administrator to use this command!',
                 flags: MessageFlags.Ephemeral
@@ -46,6 +46,11 @@ module.exports = {
                 // Send to user via DM
                 if (!user.send) throw new Error('Invalid user object');
                 await user.send(message);
+                // Send notification about sender and origin
+                const origin = interaction.guild
+                    ? `from ${interaction.guild.name} by ${interaction.user.tag}`
+                    : `privately by ${interaction.user.tag} via bot DM`;
+                await user.send(`📬 This message was sent ${origin}.`);
                 await interaction.editReply({
                     content: `Message successfully sent to ${user.tag}!`
                 });
