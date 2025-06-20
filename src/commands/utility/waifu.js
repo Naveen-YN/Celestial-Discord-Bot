@@ -61,7 +61,7 @@ module.exports = {
 
             // Create embed
             const embed = new EmbedBuilder()
-                .setTitle('Your Anime Waifu! 💖')
+                .setTitle('Your Waifu! 💖')
                 .setDescription(`Meet **${characterName}**, your new waifu!`)
                 .setImage(imageUrl)
                 .setColor('#ff69b4') // Pink for anime aesthetic
@@ -69,7 +69,7 @@ module.exports = {
                     { name: 'Tags', value: tags.join(', ') || 'None', inline: true },
                     { name: 'Source', value: image.source ? `[Link](${image.source})` : 'Unknown', inline: true }
                 )
-                .setFooter({ text: 'Powered by waifu.im' })
+                .setFooter({ text: 'Powered by Celestial Chronicles' })
                 .setTimestamp();
 
             // Send public reply
