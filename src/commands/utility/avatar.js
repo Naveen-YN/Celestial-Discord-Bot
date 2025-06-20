@@ -6,7 +6,8 @@ module.exports = {
         .setDescription('Get the avatar of a user')
         .addUserOption(option =>
             option.setName('user')
-                .setDescription('The 👤user to get the avatar from')),
+                .setDescription('The 👤user to get the avatar from')
+                .setRequired(true)),
 
     async execute(interaction) {
         const user = interaction.options.getUser('user') ?? interaction.user;
