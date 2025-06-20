@@ -12,6 +12,7 @@ module.exports = {
             .setTitle(`${guild.name} Server Information`)
             .setColor(0x0099FF)
             .setThumbnail(guild.iconURL())
+            .setImage(guild.iconURL({ size: 1024, dynamic: true }))
             .addFields(
                 { name: 'Owner', value: `<@${guild.ownerId}>`, inline: true },
                 { name: 'Members', value: `${guild.memberCount}`, inline: true },
