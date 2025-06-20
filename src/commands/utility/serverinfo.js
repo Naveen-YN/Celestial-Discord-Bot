@@ -7,11 +7,10 @@ module.exports = {
 
     async execute(interaction) {
         const { guild } = interaction;
-        
+        const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
         const embed = new EmbedBuilder()
             .setTitle(`${guild.name} Server Information`)
-            .setColor(0x0099FF)
-            .setThumbnail(guild.iconURL())
+            .setColor(randomColor)
             .setImage(guild.iconURL({ size: 1024, dynamic: true }))
             .addFields(
                 { name: 'Owner', value: `<@${guild.ownerId}>`, inline: true },
