@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const fetch = require('node-fetch-commonjs');
 
 // Valid SFW tags from waifu.im
 const validTags = [
