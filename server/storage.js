@@ -270,13 +270,14 @@ class DatabaseStorage {
     const query = `
       SELECT command_name, COUNT(*) as count
       FROM command_stats
-      WHERE guild_id = $1 AND used_at >= NOW() - INTERVAL '$2 days'
+      WHERE guild_id = $1 AND used_at >= NOW() - ($2 * INTERVAL '1 day')
       GROUP BY command_name
       ORDER BY count DESC;
     `;
     const result = await pool.query(query, [guildId, days]);
     return result.rows;
   }
+
 
   // Dashboard stats
   async getDashboardStats(guildId) {
