@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, InteractionResponseFlags } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -24,12 +24,17 @@ module.exports = {
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator) && interaction.guild.ownerId !== interaction.user.id) {
             return await interaction.reply({
                 content: 'You must be the server owner or an administrator to use this command!',
-                flags: InteractionResponseFlags.Ephemeral
+                flags: MessageFlags.Ephemeral
             });
         }
 
         // Defer the reply to avoid interaction timeout
-        await interaction.deferReply({ flags: InteractionResponseFlags.Ephemeral });
+        try {
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        } catch (deferError) {
+            console.error('Error deferring reply:', deferError);
+            return;
+        }
 
         const message = interaction.options.getString('message');
         const channel = interaction.options.getChannel('channel') ?? interaction.channel;
@@ -39,12 +44,14 @@ module.exports = {
         try {
             if (user) {
                 // Send to user via DM
+                if (!user.send) throw new Error('Invalid user object');
                 await user.send(message);
                 await interaction.editReply({
                     content: `Message successfully sent to ${user.tag}!`
                 });
             } else {
                 // Send to channel
+                if (!channel.send) throw new Error('Invalid channel object');
                 await channel.send({
                     content: mention ? `@everyone ${message}` : message
                 });
@@ -53,10 +60,19 @@ module.exports = {
                 });
             }
         } catch (error) {
-            console.error(error);
-            await interaction.editReply({
-                content: 'There was an error sending the message!'
+            console.error('Error executing sendmessage command:', {
+                message: error.message,
+                stack: error.stack,
+                user: user?.tag || 'N/A',
+                channel: channel?.name || 'N/A'
             });
+            try {
+                await interaction.editReply({
+                    content: `There was an error sending the message: ${error.message}`
+                });
+            } catch (editError) {
+                console.error('Error editing reply:', editError);
+            }
         }
     },
 };
