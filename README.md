@@ -7,7 +7,7 @@ A Discord bot designed to bring fun and interactive features to my discord serve
 - Custom Commands: Easily extensible for server-specific or user-created commands.
 - Web Dashboard: A user-friendly HTML/CSS dashboard for managing bot settings and viewing bot status, accessible via the hosting server.
 - Lightweight and Modular: Organized command structure for easy addition of new features.
-- Error Handling: Robust handling for API errors and unknown responses (e.g., "Unknown Waifu" issue resolved).
+- Error Handling: Robust handling for API errors and unknown responses.
 - 24/7 Uptime: Runs continuously on a dedicated Linux server (celestia) for reliable performance.
 
 # Technologies Used
