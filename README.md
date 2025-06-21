@@ -13,6 +13,6 @@ A Discord bot designed to bring fun and interactive features to my discord serve
 # Technologies Used
 Node.js: Runtime environment for the bot.
 Discord.js: Library for interacting with the Discord API.
-node-fetch: For making HTTP requests to external APIs like waifu.im.
+node-fetch: For making HTTP requests to external APIs.
 HTML/CSS: For the web dashboard interface.
 Hosted on: My own Dedicated Linux server, running 24/7.
