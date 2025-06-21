@@ -8,12 +8,11 @@ A Discord bot designed to bring fun and interactive features to my discord serve
 - Web Dashboard: A user-friendly HTML/CSS dashboard for managing bot settings and viewing bot status, accessible via the hosting server.
 - Lightweight and Modular: Organized command structure for easy addition of new features.
 - Error Handling: Robust handling for API errors and unknown responses.
-- 24/7 Uptime: Runs continuously on a dedicated Linux server (celestia) for reliable performance.
+- 24/7 Uptime: Runs continuously on a dedicated Linux server for reliable performance.
 
 # Technologies Used
 Node.js: Runtime environment for the bot.
 Discord.js: Library for interacting with the Discord API.
 node-fetch: For making HTTP requests to external APIs like waifu.im.
 HTML/CSS: For the web dashboard interface.
-Hosted on: Dedicated Linux server (celestia), running 24/7.
-
+Hosted on: My own Dedicated Linux server, running 24/7.
