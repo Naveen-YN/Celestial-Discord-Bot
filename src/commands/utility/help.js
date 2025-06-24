@@ -3,55 +3,67 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('help')
-        .setDescription('Shows all available commands'),
+        .setDescription('📜 Shows all available commands'),
 
     async execute(interaction) {
-        // Generate a random embed color
-        const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
+        const client = interaction.client;
+
+        // Random pastel-like color
+        const color = `#${Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0')}`;
 
         const embed = new EmbedBuilder()
             .setTitle('📜 Command Help')
-            .setColor(randomColor)
-            .setDescription(
-                "Welcome to the **Celestial Bot Command Guide**!\n" +
-                "Use `/help <command>` for more details on a specific command.\n\n" +
-                "**Available Categories:**"
-            )
+            .setColor(color)
+            .setThumbnail(client.user.displayAvatarURL({ size: 512, dynamic: true }))
+            .setDescription([
+                '**Welcome to the Celestial Bot Command Guide!**',
+                '> Use `/help <command>` to get details on a specific command.\n',
+                '**📂 Categories & Commands:**'
+            ].join('\n'))
             .addFields(
                 {
                     name: '🛡️ Moderation',
-                    value: 
-                        '   ✦ `/kick` - Kick a user from the server\n' +
-                        '   ✦ `/ban` - Ban a user permanently\n' +
-                        '   ✦ `/timeout` - Temporarily mute a user\n' +
-                        '   ✦ `/warn` - Issue a warning\n' +
-                        '   ✦ `/purge` - Bulk delete messages',
+                    value: [
+                        '> • `/kick` — Kick a user',
+                        '> • `/ban` — Ban a user',
+                        '> • `/timeout` — Temporarily mute a user',
+                        '> • `/warn` — Issue a warning',
+                        '> • `/purge` — Delete messages in bulk'
+                    ].join('\n'),
+                    inline: false
                 },
                 {
                     name: '🔧 Utility',
-                    value: 
-                        '   ✦ `/serverinfo` - Get server details\n' +
-                        '   ✦ `/userinfo` - Get user details\n' +
-                        '   ✦ `/avatar` - View a user’s avatar\n' +
-                        '   ✦ `/ping` - Check bot latency\n' +
-                        '   ✦ `/role` - Manage user roles\n' +
-                        '   ✦ `/channelinfo` - Get channel details',
+                    value: [
+                        '> • `/serverinfo` — View server details',
+                        '> • `/userinfo` — View user info',
+                        '> • `/avatar` — Get a user’s avatar',
+                        '> • `/ping` — Check bot latency',
+                        '> • `/role` — Manage roles',
+                        '> • `/channelinfo` — View channel info'
+                    ].join('\n'),
+                    inline: false
                 },
                 {
                     name: '⚙️ Admin',
-                    value: 
-                        '   ✦ `/welcome` - Set a welcome message\n' +
-                        '   ✦ `/autorole` - Configure auto roles\n' +
-                        '   ✦ `/announcement` - Create an announcement\n' +
-                        '   ✦ `/lockdown` - Lock/unlock a channel',
+                    value: [
+                        '> • `/welcome` — Set welcome messages',
+                        '> • `/autorole` — Configure auto-roles',
+                        '> • `/announcement` — Send announcements',
+                        '> • `/lockdown` — Lock or unlock a channel'
+                    ].join('\n'),
+                    inline: false
                 },
                 {
                     name: '🛠️ Tools',
-                    value: 
-                        '   ✦ `/embed` - Create custom embed messages',
+                    value: '> • `/embed` — Create a custom embed',
+                    inline: false
                 }
             )
-            .setFooter({ text: 'Use /help <command> for more details | Celestial Bot' })
+            .setFooter({
+                text: `Requested by ${interaction.user.tag} | Celestial Bot`,
+                iconURL: interaction.user.displayAvatarURL({ dynamic: true })
+            })
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });

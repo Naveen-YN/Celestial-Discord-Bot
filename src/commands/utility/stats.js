@@ -18,7 +18,7 @@ module.exports = {
         const seconds = totalSeconds % 60;
         const uptime = `${days}d ${hours}h ${minutes}m ${seconds}s`;
 
-        // System stats
+        // Memory usage
         const memoryUsage = process.memoryUsage();
         const heapUsedMB = (memoryUsage.heapUsed / 1024 / 1024).toFixed(2);
         const heapTotalMB = (memoryUsage.heapTotal / 1024 / 1024).toFixed(2);
@@ -28,43 +28,47 @@ module.exports = {
         const freeMemMB = (os.freemem() / 1024 / 1024).toFixed(2);
         const usedMemMB = (totalMemMB - freeMemMB).toFixed(2);
 
-        const cpuLoad = (os.loadavg()[0] / os.cpus().length).toFixed(2); // 1-min load average per core
+        const cpus = os.cpus();
+        const cpuModel = cpus[0].model;
+        const cpuLoad = (os.loadavg()[0] / cpus.length).toFixed(2);
 
         const embed = new EmbedBuilder()
             .setTitle('🤖 Bot & System Statistics')
             .setColor('#00bfff')
+            .setThumbnail(client.user.displayAvatarURL({ size: 512, dynamic: true }))
             .addFields(
                 {
                     name: '📡 Bot Stats',
                     value: [
-                        `• **Servers:** \`${client.guilds.cache.size}\``,
-                        `• **Users:** \`${client.users.cache.size}\``,
-                        `• **Channels:** \`${client.channels.cache.size}\``,
-                        `• **Latency:** \`${client.ws.ping}ms\``
+                        `> • Servers: \`${client.guilds.cache.size}\``,
+                        `> • Users: \`${client.users.cache.size}\``,
+                        `> • Channels: \`${client.channels.cache.size}\``,
+                        `> • Latency: \`${client.ws.ping}ms\``
                     ].join('\n'),
-                    inline: true
+                    inline: false
                 },
                 {
                     name: '⚙️ System Stats',
                     value: [
-                        `• **CPU Load/Core:** \`${cpuLoad}\``,
-                        `• **Platform:** \`${process.platform}\``,
-                        `• **Node.js:** \`${process.version}\``
+                        `> • CPU: \`${cpuModel}\``,
+                        `> • CPU Load/Core: \`${cpuLoad}\``,
+                        `> • Platform: \`${process.platform}\``,
+                        `> • Node.js: \`${process.version}\``
                     ].join('\n'),
-                    inline: true
+                    inline: false
                 },
                 {
                     name: '💾 Memory Usage',
                     value: [
-                        `• **Heap:** \`${heapUsedMB}MB / ${heapTotalMB}MB\` \`${memoryPercent}%\``,
-                        `• **System:** \`${usedMemMB}MB / ${totalMemMB}MB\``
+                        `> • Heap: \`${heapUsedMB}MB / ${heapTotalMB}MB\` \`${memoryPercent}%\``,
+                        `> • System: \`${usedMemMB}MB / ${totalMemMB}MB\``
                     ].join('\n'),
-                    inline: true
+                    inline: false
                 },
                 {
                     name: '⏱️ Uptime',
-                    value: `\`${uptime}\``,
-                    inline: true
+                    value: `> \`${uptime}\``,
+                    inline: false
                 }
             )
             .setFooter({
