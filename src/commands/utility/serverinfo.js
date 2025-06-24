@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ChannelType } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -8,18 +8,31 @@ module.exports = {
     async execute(interaction) {
         const { guild } = interaction;
 
-        // Fetch fresh owner data (for bots without cached ownerId)
+        // Fetch full data
         const owner = await guild.fetchOwner();
+        const channels = guild.channels.cache.filter(c => !c.isThread());
+        const textChannels = channels.filter(c => c.type === ChannelType.GuildText);
+        const voiceChannels = channels.filter(c => c.type === ChannelType.GuildVoice || c.type === ChannelType.GuildStageVoice);
 
-        // Random pastel color
+        const createdDate = `<t:${Math.floor(guild.createdTimestamp / 1000)}:F>`;
         const color = `#${Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0')}`;
 
-        const createdDate = `<t:${Math.floor(guild.createdTimestamp / 1000)}:F>`; // Discord timestamp format
+        // Top 5 roles (excluding @everyone, sorted by position)
+        const topRoles = guild.roles.cache
+            .filter(role => role.name !== '@everyone')
+            .sort((a, b) => b.position - a.position)
+            .first(5)
+            .map(role => role.toString())
+            .join(', ') || 'None';
+
+        // Most active channel (by message count not available via API, we fallback to highest position text channel)
+        const mainTextChannel = textChannels.sort((a, b) => b.position - a.position).first();
 
         const embed = new EmbedBuilder()
             .setTitle(`📊 Server Information: ${guild.name}`)
             .setColor(color)
             .setThumbnail(guild.iconURL({ size: 1024, dynamic: true }))
+            .setImage(guild.bannerURL({ size: 1024 }) || null)
             .addFields(
                 {
                     name: '👑 Owner',
@@ -43,7 +56,7 @@ module.exports = {
                 },
                 {
                     name: '📣 Channels',
-                    value: `${guild.channels.cache.filter(c => !c.isThread()).size}`,
+                    value: `• Text: \`${textChannels.size}\`\n• Voice: \`${voiceChannels.size}\`\n• Total: \`${channels.size}\``,
                     inline: true
                 },
                 {
@@ -52,19 +65,24 @@ module.exports = {
                     inline: true
                 },
                 {
-                    name: '🚀 Boost Tier',
-                    value: `Level ${guild.premiumTier || '0'}`,
-                    inline: true
-                },
-                {
-                    name: '💎 Boosts',
-                    value: `${guild.premiumSubscriptionCount || 0}`,
+                    name: '🚀 Boost Info',
+                    value: `• Tier: \`Level ${guild.premiumTier || 0}\`\n• Boosts: \`${guild.premiumSubscriptionCount || 0}\``,
                     inline: true
                 },
                 {
                     name: '🛡️ Verification Level',
                     value: `${guild.verificationLevel}`,
                     inline: true
+                },
+                {
+                    name: '🔝 Top Roles',
+                    value: `${topRoles}`,
+                    inline: false
+                },
+                {
+                    name: '💬 Most Active Channel (Likely)',
+                    value: mainTextChannel ? `<#${mainTextChannel.id}>` : 'Not Found',
+                    inline: false
                 }
             )
             .setFooter({
