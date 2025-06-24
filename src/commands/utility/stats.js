@@ -1,56 +1,76 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const os = require('os');
+const process = require('process');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('stats')
-        .setDescription('Display bot statistics'),
+        .setDescription('📊 Display bot and system statistics'),
 
     async execute(interaction) {
         const client = interaction.client;
-        const uptime = process.uptime();
-        const days = Math.floor(uptime / 86400);
-        const hours = Math.floor(uptime / 3600) % 24;
-        const minutes = Math.floor(uptime / 60) % 60;
-        const seconds = Math.floor(uptime % 60);
+
+        // Uptime formatting
+        const totalSeconds = Math.floor(process.uptime());
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        const uptime = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+        // System stats
+        const memoryUsage = process.memoryUsage();
+        const heapUsedMB = (memoryUsage.heapUsed / 1024 / 1024).toFixed(2);
+        const heapTotalMB = (memoryUsage.heapTotal / 1024 / 1024).toFixed(2);
+        const memoryPercent = ((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100).toFixed(2);
+
+        const totalMemMB = (os.totalmem() / 1024 / 1024).toFixed(2);
+        const freeMemMB = (os.freemem() / 1024 / 1024).toFixed(2);
+        const usedMemMB = (totalMemMB - freeMemMB).toFixed(2);
+
+        const cpuLoad = (os.loadavg()[0] / os.cpus().length).toFixed(2); // 1-min load average per core
 
         const embed = new EmbedBuilder()
-            .setTitle('🤖 Bot Statistics')
-            .setColor('#0099ff')
+            .setTitle('🤖 Bot & System Statistics')
+            .setColor('#00bfff')
             .addFields(
-                { 
-                    name: '📊 Server Stats',
+                {
+                    name: '📡 Bot Stats',
                     value: [
-                        `**Servers:** ${client.guilds.cache.size}`,
-                        `**Users:** ${client.users.cache.size}`,
-                        `**Channels:** ${client.channels.cache.size}`
+                        `• **Servers:** \`${client.guilds.cache.size}\``,
+                        `• **Users:** \`${client.users.cache.size}\``,
+                        `• **Channels:** \`${client.channels.cache.size}\``,
+                        `• **Latency:** \`${client.ws.ping}ms\``
                     ].join('\n'),
                     inline: true
                 },
                 {
                     name: '⚙️ System Stats',
                     value: [
-                        `**Memory:** ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB`,
-                        `**Node.js:** ${process.version}`,
-                        `**Platform:** ${process.platform}`
+                        `• **CPU Load/Core:** \`${cpuLoad}\``,
+                        `• **Platform:** \`${process.platform}\``,
+                        `• **Node.js:** \`${process.version}\``
                     ].join('\n'),
                     inline: true
                 },
                 {
-                    name: '⏰ Uptime',
-                    value: `${days}d ${hours}h ${minutes}m ${seconds}s`,
-                    inline: true
-                },
-                {
-                    name: '🔄 Performance',
+                    name: '💾 Memory Usage',
                     value: [
-                        `**API Latency:** ${client.ws.ping}ms`,
-                        `**CPU Usage:** ${(process.cpuUsage().user / 1024 / 1024).toFixed(2)}%`,
-                        `**Memory Usage:** ${(process.memoryUsage().heapUsed / process.memoryUsage().heapTotal * 100).toFixed(2)}%`
+                        `• **Heap:** \`${heapUsedMB}MB / ${heapTotalMB}MB\` \`${memoryPercent}%\``,
+                        `• **System:** \`${usedMemMB}MB / ${totalMemMB}MB\``
                     ].join('\n'),
-                    inline: false
+                    inline: true
+                },
+                {
+                    name: '⏱️ Uptime',
+                    value: `\`${uptime}\``,
+                    inline: true
                 }
             )
+            .setFooter({
+                text: `Requested by ${interaction.user.tag}`,
+                iconURL: interaction.user.displayAvatarURL({ dynamic: true })
+            })
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });
