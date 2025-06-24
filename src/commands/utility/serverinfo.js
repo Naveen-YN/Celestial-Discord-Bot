@@ -8,25 +8,20 @@ module.exports = {
     async execute(interaction) {
         const { guild } = interaction;
 
-        // Fetch full data
         const owner = await guild.fetchOwner();
         const channels = guild.channels.cache.filter(c => !c.isThread());
         const textChannels = channels.filter(c => c.type === ChannelType.GuildText);
         const voiceChannels = channels.filter(c => c.type === ChannelType.GuildVoice || c.type === ChannelType.GuildStageVoice);
-
         const createdDate = `<t:${Math.floor(guild.createdTimestamp / 1000)}:F>`;
         const color = `#${Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0')}`;
 
-        // Top 5 roles (excluding @everyone, sorted by position)
+        // Top 5 roles, each on a new line
         const topRoles = guild.roles.cache
             .filter(role => role.name !== '@everyone')
             .sort((a, b) => b.position - a.position)
             .first(5)
-            .map(role => role.toString())
-            .join(', ') || 'None';
-
-        // Most active channel (by message count not available via API, we fallback to highest position text channel)
-        const mainTextChannel = textChannels.sort((a, b) => b.position - a.position).first();
+            .map(role => `• ${role}`)
+            .join('\n') || 'None';
 
         const embed = new EmbedBuilder()
             .setTitle(`📊 Server Information: ${guild.name}`)
@@ -76,12 +71,7 @@ module.exports = {
                 },
                 {
                     name: '🔝 Top Roles',
-                    value: `${topRoles}`,
-                    inline: false
-                },
-                {
-                    name: '💬 Most Active Channel (Likely)',
-                    value: mainTextChannel ? `<#${mainTextChannel.id}>` : 'Not Found',
+                    value: topRoles,
                     inline: false
                 }
             )
