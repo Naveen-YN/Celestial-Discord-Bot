@@ -25,19 +25,20 @@ client.commands = new Collection();
 
 // --- Load Commands from ./commands Directory ---
 const foldersPath = path.join(__dirname, 'commands');
-const commandFolders = fs.readdirSync(foldersPath);
+if (fs.existsSync(foldersPath)) {
+    const commandFolders = fs.readdirSync(foldersPath);
+    for (const folder of commandFolders) {
+        const commandsPath = path.join(foldersPath, folder);
+        const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-for (const folder of commandFolders) {
-    const commandsPath = path.join(foldersPath, folder);
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-
-    for (const file of commandFiles) {
-        const filePath = path.join(commandsPath, file);
-        const command = require(filePath);
-        if ('data' in command && 'execute' in command) {
-            client.commands.set(command.data.name, command);
-        } else {
-            console.warn(`[WARNING] The command at ${filePath} is missing "data" or "execute".`);
+        for (const file of commandFiles) {
+            const filePath = path.join(commandsPath, file);
+            const command = require(filePath);
+            if ('data' in command && 'execute' in command) {
+                client.commands.set(command.data.name, command);
+            } else {
+                console.warn(`[WARNING] The command at ${filePath} is missing "data" or "execute".`);
+            }
         }
     }
 }
@@ -47,9 +48,15 @@ client.once(Events.ClientReady, async () => {
     console.log(`Ready! Logged in as ${client.user.tag}`);
 
     try {
-        const { storage } = require('../server/storage.js');
-        const guildCount = await storage.syncGuilds(client.guilds.cache);
-        console.log(`Synced ${guildCount} guilds to database`);
+        const storageModule = require('../server/storage.js');
+        const syncGuildsFunc = storageModule?.syncGuilds || storageModule?.storage?.syncGuilds;
+
+        if (typeof syncGuildsFunc === 'function') {
+            const guildCount = await syncGuildsFunc(client.guilds.cache);
+            console.log(`Synced ${guildCount} guilds to database`);
+        } else {
+            console.warn('storage.syncGuilds function not found, skipping guild sync.');
+        }
     } catch (error) {
         console.error('Error syncing guilds:', error);
     }
@@ -73,70 +80,83 @@ client.on(Events.InteractionCreate, async interaction => {
         }
     }, 2000);
 
-    // --- Custom Commands ---
-    if (!command) {
-        try {
-            const { storage } = require('../server/storage.js');
-            const customCommand = await storage.getCustomCommand(interaction.commandName, interaction.guild?.id);
+    try {
+        const storageModule = require('../server/storage.js');
 
-            if (customCommand && customCommand.isEnabled) {
-                const { getMemberRoleLevel, ROLE_HIERARCHY } = require('./utils/rolePermissions.js');
-                const requiredLevel = ROLE_HIERARCHY[customCommand.permissions.toUpperCase()] || ROLE_HIERARCHY.EVERYONE;
+        // --- Custom Commands ---
+        if (!command) {
+            const getCustomCommand = storageModule?.getCustomCommand || storageModule?.storage?.getCustomCommand;
 
-                if (interaction.guild) {
-                    const member = interaction.guild.members.cache.get(interaction.user.id);
-                    const userLevel = getMemberRoleLevel(member);
+            if (typeof getCustomCommand === 'function') {
+                const customCommand = await getCustomCommand(interaction.commandName, interaction.guild?.id);
 
-                    if (userLevel < requiredLevel) {
-                        clearTimeout(autoDefer);
-                        return interaction.reply({
-                            content: `You don't have permission to use this command. Required: ${customCommand.permissions}`,
-                            flags: MessageFlags.Ephemeral
+                if (customCommand && customCommand.isEnabled) {
+                    const { getMemberRoleLevel, ROLE_HIERARCHY } = require('./utils/rolePermissions.js');
+                    const requiredLevel = ROLE_HIERARCHY[customCommand.permissions.toUpperCase()] || ROLE_HIERARCHY.EVERYONE;
+
+                    if (interaction.guild) {
+                        const member = interaction.guild.members.cache.get(interaction.user.id);
+                        const userLevel = getMemberRoleLevel(member);
+
+                        if (userLevel < requiredLevel) {
+                            clearTimeout(autoDefer);
+                            return interaction.reply({
+                                content: `You don't have permission to use this command. Required: ${customCommand.permissions}`,
+                                flags: MessageFlags.Ephemeral
+                            });
+                        }
+                    }
+
+                    // Reply content
+                    let replyContent = {};
+                    if (customCommand.responseType === 'embed' && customCommand.embedData) {
+                        replyContent = { embeds: [new EmbedBuilder(customCommand.embedData)] };
+                    } else {
+                        replyContent = { content: customCommand.response };
+                    }
+
+                    clearTimeout(autoDefer);
+                    const reply = await interaction.reply(replyContent);
+
+                    // Save to DB (if function exists)
+                    const saveBotMessage = storageModule?.saveBotMessage || storageModule?.storage?.saveBotMessage;
+                    const incrementCommandUsage = storageModule?.incrementCommandUsage || storageModule?.storage?.incrementCommandUsage;
+                    const recordCommandUsage = storageModule?.recordCommandUsage || storageModule?.storage?.recordCommandUsage;
+
+                    if (typeof saveBotMessage === 'function') {
+                        await saveBotMessage({
+                            guildId: interaction.guild?.id,
+                            channelId: interaction.channel.id,
+                            messageId: reply.id,
+                            messageType: 'custom_command',
+                            content: customCommand.responseType === 'text' ? customCommand.response : null,
+                            embedData: customCommand.responseType === 'embed' ? customCommand.embedData : null,
+                            sentBy: client.user.id
                         });
                     }
+
+                    if (typeof incrementCommandUsage === 'function') {
+                        await incrementCommandUsage(interaction.commandName, interaction.guild?.id);
+                    }
+
+                    if (typeof recordCommandUsage === 'function') {
+                        await recordCommandUsage({
+                            guildId: interaction.guild?.id || null,
+                            commandName: interaction.commandName,
+                            userId: interaction.user.id
+                        });
+                    }
+
+                    return;
                 }
-
-                // Reply content
-                let replyContent = {};
-                if (customCommand.responseType === 'embed' && customCommand.embedData) {
-                    replyContent = { embeds: [new EmbedBuilder(customCommand.embedData)] };
-                } else {
-                    replyContent = { content: customCommand.response };
-                }
-
-                clearTimeout(autoDefer);
-                const reply = await interaction.reply(replyContent);
-
-                // Save to DB
-                await storage.saveBotMessage({
-                    guildId: interaction.guild?.id,
-                    channelId: interaction.channel.id,
-                    messageId: reply.id,
-                    messageType: 'custom_command',
-                    content: customCommand.responseType === 'text' ? customCommand.response : null,
-                    embedData: customCommand.responseType === 'embed' ? customCommand.embedData : null,
-                    sentBy: client.user.id
-                });
-                await storage.incrementCommandUsage(interaction.commandName, interaction.guild?.id);
-                await storage.recordCommandUsage({
-                    guildId: interaction.guild?.id || null,
-                    commandName: interaction.commandName,
-                    userId: interaction.user.id
-                });
-
-                return;
             }
-        } catch (error) {
-            console.error('Error executing custom command:', error);
+
+            console.error(`No command matching /${interaction.commandName} found.`);
+            clearTimeout(autoDefer);
+            return;
         }
 
-        console.error(`No command matching /${interaction.commandName} found.`);
-        clearTimeout(autoDefer);
-        return;
-    }
-
-    // --- Standard Slash Commands ---
-    try {
+        // --- Standard Slash Commands ---
         const { hasCommandPermission, getRequiredRoleLevel, getMemberRoleLevel, createPermissionErrorEmbed } =
             require('./utils/rolePermissions.js');
 
@@ -156,16 +176,14 @@ client.on(Events.InteractionCreate, async interaction => {
         await command.execute(interaction);
         clearTimeout(autoDefer);
 
-        // Record usage
-        try {
-            const { storage } = require('../server/storage.js');
-            await storage.recordCommandUsage({
+        // Record usage (if function exists)
+        const recordCommandUsage = storageModule?.recordCommandUsage || storageModule?.storage?.recordCommandUsage;
+        if (typeof recordCommandUsage === 'function') {
+            await recordCommandUsage({
                 guildId: interaction.guild?.id || null,
                 commandName: interaction.commandName,
                 userId: interaction.user.id
             });
-        } catch (error) {
-            console.error('Error recording command usage:', error);
         }
 
     } catch (error) {
